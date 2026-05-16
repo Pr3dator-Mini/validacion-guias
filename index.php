@@ -237,9 +237,18 @@ input::placeholder{
     transform:scale(1.2);
 }
 
+.button-group{
+
+    display:flex;
+
+    gap:15px;
+
+    margin-top:10px;
+}
+
 button{
 
-    width:100%;
+    flex:1;
 
     padding:16px;
 
@@ -247,16 +256,9 @@ button{
 
     border-radius:16px;
 
-    background:
-    linear-gradient(
-    90deg,
-    #0ea5e9,
-    #2563eb
-    );
-
     color:white;
 
-    font-size:17px;
+    font-size:16px;
 
     font-weight:600;
 
@@ -265,12 +267,40 @@ button{
     transition:0.3s;
 }
 
-button:hover{
+.process-btn{
+
+    background:
+    linear-gradient(
+    90deg,
+    #0ea5e9,
+    #2563eb
+    );
+}
+
+.process-btn:hover{
 
     transform:translateY(-2px);
 
     box-shadow:
     0 10px 25px rgba(37,99,235,0.4);
+}
+
+.reset-btn{
+
+    background:
+    linear-gradient(
+    90deg,
+    #ef4444,
+    #dc2626
+    );
+}
+
+.reset-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 25px rgba(239,68,68,0.4);
 }
 
 .result{
@@ -344,6 +374,10 @@ button:hover{
         font-size:32px;
     }
 
+    .button-group{
+        flex-direction:column;
+    }
+
 }
 
 </style>
@@ -362,7 +396,7 @@ button:hover{
 
 </div>
 
-<form method="POST">
+<form method="POST" id="calcForm">
 
 <div class="form-group">
 
@@ -498,13 +532,25 @@ value="<?= htmlspecialchars($fuelEscalationRate) ?>">
 
 </div>
 
-<button type="submit">
+<div class="button-group">
+
+<button type="submit" class="process-btn">
 
 <i class="fas fa-calculator"></i>
 
 Procesar
 
 </button>
+
+<button type="button" class="reset-btn" onclick="resetForm()">
+
+<i class="fas fa-trash"></i>
+
+Borrar
+
+</button>
+
+</div>
 
 </form>
 
@@ -524,11 +570,6 @@ Resumen de Cálculos
 <p>
 <span>Fuel:</span>
 <span>$<?= number_format($fuel,2) ?></span>
-</p>
-
-<p>
-<span>Fuel Escalation Rate:</span>
-<span>$<?= number_format($fuelEscalationRate,2) ?></span>
 </p>
 
 <p>
@@ -584,6 +625,18 @@ Sistema M6 • Validación de Guías
 </div>
 
 </div>
+
+<script>
+
+function resetForm(){
+
+    document.getElementById('calcForm').reset();
+
+    window.location.href = window.location.pathname;
+
+}
+
+</script>
 
 </body>
 </html>
