@@ -19,6 +19,8 @@ $collectFeeAplica     = isset($_POST['collect_fee']);
 $ivaAplica            = isset($_POST['iva']);
 $fuelEscalationAplica = isset($_POST['fuel_escalation']);
 
+$fuelEscalationRate = getInput('fuel_escalation_rate', 0.20, true);
+
 $peakSeason = $_POST['peak_season'] ?? '';
 
 // Cálculos
@@ -60,20 +62,20 @@ if ($isPost) {
 
     // Fuel Escalation
     $fuelEscalation = $fuelEscalationAplica
-        ? ($pesoVolumetrico * 0.20)
+        ? ($pesoVolumetrico * $fuelEscalationRate)
         : 0;
 
     // Subtotal
     $subtotal =
         $flete +
         $fuel +
+        $fuelEscalation +
         $security +
         $pba +
         ($collectFeeAplica ? $collectFee : 0) +
         $cargosAgente +
         $other +
-        $peakSeasonCharge +
-        $fuelEscalation;
+        $peakSeasonCharge;
 
     // IVA
     $iva = $ivaAplica
@@ -140,9 +142,9 @@ body{
 
     width:100%;
 
-    max-width:580px;
+    max-width:600px;
 
-    background:rgba(15,23,42,0.85);
+    background:rgba(15,23,42,0.88);
 
     backdrop-filter:blur(15px);
 
@@ -485,6 +487,17 @@ Aplicar Fuel Escalation
 
 </div>
 
+<div class="form-group">
+
+<input
+type="number"
+name="fuel_escalation_rate"
+step="0.01"
+placeholder="Fuel Escalation Rate"
+value="<?= htmlspecialchars($fuelEscalationRate) ?>">
+
+</div>
+
 <button type="submit">
 
 <i class="fas fa-calculator"></i>
@@ -514,6 +527,11 @@ Resumen de Cálculos
 </p>
 
 <p>
+<span>Fuel Escalation Rate:</span>
+<span>$<?= number_format($fuelEscalationRate,2) ?></span>
+</p>
+
+<p>
 <span>Fuel Escalation:</span>
 <span>$<?= number_format($fuelEscalation,2) ?></span>
 </p>
@@ -526,6 +544,11 @@ Resumen de Cálculos
 <p>
 <span>PBA:</span>
 <span>$<?= number_format($pba,2) ?></span>
+</p>
+
+<p>
+<span>Otros Cargos:</span>
+<span>$<?= number_format($other,2) ?></span>
 </p>
 
 <p>
