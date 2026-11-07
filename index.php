@@ -816,6 +816,57 @@ button, input, select {
 .tariff-copy{margin-top:16px}.tariff-note{color:#64748b;font-size:10px;line-height:1.7;margin-top:14px}
 @media(max-width:600px){.main-menu{grid-template-columns:1fr}.tariff-search{grid-template-columns:1fr}.menu-card{padding:15px}}
 
+
+/* PROFORMA */
+.proforma-layout{display:grid;grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.proforma-controls{background:#101a2e;border:1px solid rgba(148,163,184,.14);border-radius:16px;padding:20px}
+.proforma-controls h3{font-size:14px;margin-bottom:16px;color:#e2e8f0}
+.proforma-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.proforma-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.proforma-field.full{grid-column:1/-1}
+.proforma-field label{font-size:11px;color:#cbd5e1;font-weight:600}
+.proforma-field input,.proforma-field textarea{width:100%;min-width:0;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:#0b1426;color:#f8fafc;padding:11px 12px;font:inherit;font-size:12px;outline:none}
+.proforma-field input:focus,.proforma-field textarea:focus{border-color:#1e5a91;box-shadow:0 0 0 3px rgba(30,90,145,.18)}
+.proforma-field textarea{min-height:76px;resize:vertical}
+.proforma-hint{font-size:10px;color:#94a3b8;line-height:1.5;margin-top:12px}
+.proforma-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.proforma-actions .btn{flex:1}
+.proforma-paper{background:#fff;color:#111827;padding:28px 26px;box-shadow:0 18px 50px rgba(0,0,0,.25);border-radius:4px;min-height:500px;font-family:Arial,sans-serif}
+.proforma-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;min-height:112px}
+.proforma-logo{width:245px;max-width:52%;height:auto;object-fit:contain;object-position:left top}
+.proforma-title{text-align:right;flex:1}
+.proforma-title h2{font-size:22px;font-weight:400;color:#111;margin:0 0 14px;white-space:nowrap}
+.proforma-title p{font-size:10px;color:#64748b;line-height:1.35;margin:0}
+.proforma-info{display:flex;justify-content:space-between;gap:20px;margin:24px 0 28px;font-size:11px;line-height:1.6}
+.proforma-client{max-width:48%;overflow-wrap:anywhere}
+.proforma-client strong{display:block;font-size:11px;margin-bottom:3px}
+.proforma-dates{min-width:190px}
+.proforma-date-line{display:flex;justify-content:space-between;gap:12px}
+.proforma-date-line strong{white-space:nowrap}
+.proforma-paper table{width:100%;border-collapse:collapse;font-size:11px}
+.proforma-paper thead th{background:#0b3158;color:#fff;text-align:left;padding:10px 8px;font-size:10px}
+.proforma-paper thead th:not(:first-child),.proforma-paper tbody td:not(:first-child){text-align:right}
+.proforma-paper tbody td{padding:11px 8px;border-bottom:1px solid #d1d5db;vertical-align:top}
+.proforma-summary{width:55%;margin:0 0 0 auto;font-size:11px}
+.proforma-summary-row{display:flex;justify-content:space-between;gap:15px;padding:8px;border-bottom:1px solid #d1d5db}
+.proforma-summary-row.total{border-top:2px solid #0b3158;border-bottom:0;font-size:17px;font-weight:700;color:#0b3158;padding-top:12px}
+.proforma-paper-footer{font-size:9px;color:#64748b;margin-top:32px;text-align:center}
+@media(max-width:800px){.proforma-layout{grid-template-columns:1fr}.proforma-paper{padding:20px 15px}}
+@media(max-width:480px){.proforma-grid{grid-template-columns:1fr}.proforma-field.full{grid-column:auto}.proforma-info{flex-direction:column;margin:18px 0}.proforma-dates{min-width:0}.proforma-title h2{font-size:17px}.proforma-logo{width:170px}.proforma-summary{width:100%}}
+@media print{
+  @page{size:A4;margin:12mm}
+  html,body{background:#fff!important;padding:0!important;margin:0!important;min-height:0!important}
+  body{color:#111!important}
+  .container{max-width:none!important;width:100%!important;margin:0!important}
+  .header,.main-menu,.footer,#validationView,#tariffView,.proforma-controls,.proforma-section-heading{display:none!important}
+  #proformaView{display:block!important}
+  #proformaView .panel{padding:0!important;margin:0!important;background:#fff!important;border:0!important;box-shadow:none!important}
+  .proforma-layout{display:block!important}
+  .proforma-paper{display:block!important;box-shadow:none!important;border-radius:0!important;padding:0!important;min-height:0!important}
+  .proforma-paper thead th{background:#0b3158!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .proforma-summary-row.total{color:#0b3158!important}
+}
+
 </style>
 
 </head>
@@ -854,6 +905,9 @@ button, input, select {
         </button>
         <button type="button" class="menu-card" data-view="tariffView">
             <i class="fas fa-plane-departure"></i><span><strong>Consulta de tarifas</strong><small>Buscador por destino y escalas KG</small></span>
+        </button>
+        <button type="button" class="menu-card" data-view="proformaView">
+            <i class="fas fa-file-invoice-dollar"></i><span><strong>Generar proforma</strong><small>Crear factura proforma e imprimir en PDF</small></span>
         </button>
     </nav>
 
@@ -1245,6 +1299,63 @@ button, input, select {
         </div>
         <div class="button-group tariff-copy"><button type="button" class="btn btn-copy" id="copyTariffBtn"><i class="fas fa-copy"></i> Copiar tarifas mostradas</button></div>
         <div class="copy-feedback" id="tariffFeedback"></div>
+        <p class="tariff-note">Tarifario Amerijet SAL · Vigencia indicada en el documento: 30 de agosto de 2026. Tarifas en USD. La consulta muestra los valores del documento; verificá vigencia y cargos adicionales con la aerolínea antes de cotizar.</p>
+      </main>
+    </section>
+
+
+    <section id="proformaView" class="module-view">
+      <main class="panel">
+        <div class="section-heading proforma-section-heading">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <div><h2>Generador de factura proforma</h2><p>Completá los datos y mirá la factura actualizarse automáticamente.</p></div>
+        </div>
+        <div class="proforma-layout">
+          <div class="proforma-controls">
+            <h3><i class="fas fa-pen-to-square"></i> Datos de la proforma</h3>
+            <div class="proforma-grid">
+              <div class="proforma-field full"><label for="pfClient">Nombre del cliente</label><input id="pfClient" type="text" placeholder="Nombre o razón social"></div>
+              <div class="proforma-field"><label for="pfNumber">N.º de proforma</label><input id="pfNumber" type="text" value="001"></div>
+              <div class="proforma-field"><label for="pfDate">Fecha</label><input id="pfDate" type="date"></div>
+              <div class="proforma-field"><label for="pfDue">Vencimiento</label><input id="pfDue" type="date"></div>
+              <div class="proforma-field"><label for="pfDelivery">Fecha de entrega</label><input id="pfDelivery" type="date"></div>
+              <div class="proforma-field full"><label for="pfDescription">Descripción</label><textarea id="pfDescription" placeholder="Descripción del servicio o cargo"></textarea></div>
+              <div class="proforma-field"><label for="pfQuantity">Cantidad</label><input id="pfQuantity" type="number" min="0.01" step="0.01" value="1"></div>
+              <div class="proforma-field"><label for="pfPrice">Precio unitario (USD)</label><input id="pfPrice" type="number" min="0" step="0.01" placeholder="0.00"></div>
+            </div>
+            <p class="proforma-hint">El subtotal se calcula con cantidad × precio unitario. El IVA del 13% se agrega automáticamente y se refleja en el total.</p>
+            <div class="proforma-actions">
+              <button type="button" class="btn btn-primary" id="pfPrint"><i class="fas fa-print"></i> Imprimir / Guardar PDF</button>
+              <button type="button" class="btn btn-secondary" id="pfClear"><i class="fas fa-rotate-left"></i> Limpiar</button>
+            </div>
+          </div>
+          <div class="proforma-paper" id="proformaPaper">
+            <div class="proforma-top">
+              <img class="proforma-logo" src="data:image/jpeg;base64,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" alt="Amerijet International Airlines">
+              <div class="proforma-title"><h2>FACTURA PROFORMA</h2><p><strong>Amerijet</strong><br>San Salvador</p></div>
+            </div>
+            <div class="proforma-info">
+              <div class="proforma-client"><strong>PARA</strong><span id="pfPreviewClient">NOMBRE DEL CLIENTE</span></div>
+              <div class="proforma-dates">
+                <div class="proforma-date-line"><span>Factura proforma n.º:</span><strong id="pfPreviewNumber">001</strong></div>
+                <div class="proforma-date-line"><span>Fecha:</span><strong id="pfPreviewDate">—</strong></div>
+                <div class="proforma-date-line"><span>Vencimiento:</span><strong id="pfPreviewDue">—</strong></div>
+                <div style="height:12px"></div>
+                <div class="proforma-date-line"><span>Fecha de entrega:</span><strong id="pfPreviewDelivery">—</strong></div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th style="width:48%">DESCRIPCIÓN</th><th>CANTIDAD</th><th>PRECIO ($)</th><th>IVA %</th><th>TOTAL ($)</th></tr></thead>
+              <tbody><tr><td id="pfPreviewDescription">—</td><td id="pfPreviewQuantity">1</td><td id="pfPreviewPrice">0.00</td><td>13%</td><td id="pfPreviewLineTotal">0.00</td></tr></tbody>
+            </table>
+            <div class="proforma-summary">
+              <div class="proforma-summary-row"><strong>SUBTOTAL (USD):</strong><span id="pfPreviewSubtotal">$0.00</span></div>
+              <div class="proforma-summary-row"><strong>IVA (13%):</strong><span id="pfPreviewTax">$0.00</span></div>
+              <div class="proforma-summary-row total"><strong>TOTAL A PAGAR (USD)</strong><span id="pfPreviewTotal">$0.00</span></div>
+            </div>
+            <div class="proforma-paper-footer">Amerijet International · San Salvador</div>
+          </div>
+        </div>
       </main>
     </section>
 
@@ -1252,7 +1363,7 @@ button, input, select {
 
     <footer class="footer">
 
-        Desarrollado por Cristian · +50379979583 © 2026
+        Desarrollado por Cris · +50379979583 © 2026
 
     </footer>
 
@@ -1587,6 +1698,60 @@ document.getElementById('copyBtn').addEventListener('click', async function() {
     }
 
 });
+
+
+/* GENERADOR DE PROFORMA - ACTUALIZACIÓN EN VIVO */
+const pfIds=['pfClient','pfNumber','pfDate','pfDue','pfDelivery','pfDescription','pfQuantity','pfPrice'];
+const pfMoney=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
+const pfDateFormat=value=>{
+    if(!value)return '—';
+    const parts=value.split('-');
+    return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:value;
+};
+function updateProforma(){
+    const quantity=Math.max(0,parseFloat(document.getElementById('pfQuantity').value)||0);
+    const price=Math.max(0,parseFloat(document.getElementById('pfPrice').value)||0);
+    const subtotal=quantity*price;
+    const tax=subtotal*0.13;
+    const total=subtotal+tax;
+    const put=(id,value)=>{document.getElementById(id).textContent=value;};
+    put('pfPreviewClient',document.getElementById('pfClient').value.trim()||'NOMBRE DEL CLIENTE');
+    put('pfPreviewNumber',document.getElementById('pfNumber').value.trim()||'—');
+    put('pfPreviewDate',pfDateFormat(document.getElementById('pfDate').value));
+    put('pfPreviewDue',pfDateFormat(document.getElementById('pfDue').value));
+    put('pfPreviewDelivery',pfDateFormat(document.getElementById('pfDelivery').value));
+    put('pfPreviewDescription',document.getElementById('pfDescription').value.trim()||'—');
+    put('pfPreviewQuantity',quantity.toLocaleString('en-US',{maximumFractionDigits:2}));
+    put('pfPreviewPrice',price.toFixed(2));
+    put('pfPreviewLineTotal',pfMoney.format(total));
+    put('pfPreviewSubtotal',pfMoney.format(subtotal));
+    put('pfPreviewTax',pfMoney.format(tax));
+    put('pfPreviewTotal',pfMoney.format(total));
+}
+function localDateInput(date){
+    const offset=date.getTimezoneOffset();
+    return new Date(date.getTime()-offset*60000).toISOString().slice(0,10);
+}
+const todayPF=new Date();
+document.getElementById('pfDate').value=localDateInput(todayPF);
+document.getElementById('pfDelivery').value=localDateInput(todayPF);
+const duePF=new Date(todayPF);duePF.setDate(duePF.getDate()+14);
+document.getElementById('pfDue').value=localDateInput(duePF);
+pfIds.forEach(id=>document.getElementById(id).addEventListener('input',updateProforma));
+document.getElementById('pfPrint').addEventListener('click',()=>{updateProforma();window.print();});
+document.getElementById('pfClear').addEventListener('click',()=>{
+    document.getElementById('pfClient').value='';
+    document.getElementById('pfNumber').value='001';
+    document.getElementById('pfDescription').value='';
+    document.getElementById('pfQuantity').value='1';
+    document.getElementById('pfPrice').value='';
+    document.getElementById('pfDate').value=localDateInput(new Date());
+    document.getElementById('pfDelivery').value=localDateInput(new Date());
+    const due=new Date();due.setDate(due.getDate()+14);
+    document.getElementById('pfDue').value=localDateInput(due);
+    updateProforma();
+});
+updateProforma();
 
 </script>
 
