@@ -1,36 +1,26 @@
 
 <?php
-session_start();
+// SISTEMA M6 - PREMIUM 3.0
+// IMPORTANTE: guardar este archivo como UTF-8 SIN BOM.
 
-/*
-|--------------------------------------------------------------------------
-| SISTEMA M6 - VALIDACIÓN DE GUÍAS
-| PREMIUM EDITION 2.1
-|--------------------------------------------------------------------------
-| Cálculos automáticos
-| Historial por sesión
-| Copiar resumen
-| Validación PHP
-| Moneda USD
-|--------------------------------------------------------------------------
-*/
+ob_start();
 
-// =========================================================
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ======================================================
 // CONFIGURACIÓN
-// =========================================================
+// ======================================================
 
+const MAX_HISTORY = 20;
 const IVA_RATE = 0.13;
 const FUEL_RATE = 0.44;
 const SECURITY_RATE = 0.10;
 const PBA_RATE = 0.12;
 const COLLECT_RATE = 0.05;
-const MAX_HISTORY = 20;
 
-// =========================================================
-// SESIÓN
-// =========================================================
-
-if (!isset($_SESSION['m6_history'])) {
+if (!isset($_SESSION['m6_history']) || !is_array($_SESSION['m6_history'])) {
     $_SESSION['m6_history'] = [];
 }
 
@@ -38,32 +28,25 @@ if (empty($_SESSION['m6_token'])) {
     $_SESSION['m6_token'] = bin2hex(random_bytes(32));
 }
 
-// =========================================================
+// ======================================================
 // FUNCIONES
-// =========================================================
+// ======================================================
 
-function escape($value) {
-    return htmlspecialchars(
-        (string)$value,
-        ENT_QUOTES,
-        'UTF-8'
-    );
+function e($value) {
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function money($value) {
+function usd($value) {
     return '$' . number_format((float)$value, 2, '.', ',');
 }
 
 function getNumber($source, $key, $default = 0) {
 
     if (!isset($source[$key]) || $source[$key] === '') {
-        return $default;
+        return (float)$default;
     }
 
-    $value = filter_var(
-        $source[$key],
-        FILTER_VALIDATE_FLOAT
-    );
+    $value = filter_var($source[$key], FILTER_VALIDATE_FLOAT);
 
     if ($value === false || !is_finite((float)$value)) {
         throw new InvalidArgumentException(
@@ -75,18 +58,18 @@ function getNumber($source, $key, $default = 0) {
 
     if ($value < 0) {
         throw new InvalidArgumentException(
-            "No se permiten valores negativos."
+            'No se permiten valores negativos.'
         );
     }
 
     return $value;
 }
 
-// =========================================================
-// MOTOR DE CÁLCULO
-// =========================================================
+// ======================================================
+// MOTOR DE CÁLCULO ORIGINAL
+// ======================================================
 
-function calculate($data) {
+function calculateM6($data) {
 
     $peso = $data['peso_volumetrico'];
     $tarifaMin = $data['tarifa_min'];
@@ -101,17 +84,17 @@ function calculate($data) {
         : ($tarifaAplicar * $peso);
 
     // FUEL
-    $fuel = $peso > 0
+    $fuel = $peso
         ? max(15, 0.44 * $peso)
         : 0;
 
     // SECURITY
-    $security = $peso > 0
+    $security = $peso
         ? max(10, 0.10 * $peso)
         : 0;
 
     // PBA
-    $pba = $cargosAgente > 0
+    $pba = $cargosAgente
         ? max(35, $cargosAgente * 0.12)
         : 0;
 
@@ -122,18 +105,9 @@ function calculate($data) {
     $peakSeasonCharge = 0;
 
     if ($data['peak_season'] === 'okra') {
-
-        $peakSeasonCharge = max(
-            10,
-            0.02 * $peso
-        );
-
+        $peakSeasonCharge = max(10, 0.02 * $peso);
     } elseif ($data['peak_season'] === 'general') {
-
-        $peakSeasonCharge = max(
-            10,
-            0.05 * $peso
-        );
+        $peakSeasonCharge = max(10, 0.05 * $peso);
     }
 
     // FUEL ESCALATION
@@ -146,7 +120,7 @@ function calculate($data) {
         ? $collectFee
         : 0;
 
-    // SUBTOTAL
+    // SUBTOTAL ORIGINAL
     $subtotal =
         $flete +
         $fuel +
@@ -182,9 +156,9 @@ function calculate($data) {
     ];
 }
 
-// =========================================================
+// ======================================================
 // VALORES INICIALES
-// =========================================================
+// ======================================================
 
 $defaults = [
     'peso_volumetrico' => 0,
@@ -205,16 +179,15 @@ $errors = [];
 
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 
-// =========================================================
+// ======================================================
 // BORRAR HISTORIAL
-// =========================================================
+// ======================================================
 
 if (isset($_GET['clear_history'])) {
 
-    if (
-        !isset($_GET['token']) ||
-        !hash_equals($_SESSION['m6_token'], (string)$_GET['token'])
-    ) {
+    $token = isset($_GET['token']) ? (string)$_GET['token'] : '';
+
+    if (!hash_equals($_SESSION['m6_token'], $token)) {
         http_response_code(403);
         exit('Solicitud no autorizada.');
     }
@@ -225,43 +198,35 @@ if (isset($_GET['clear_history'])) {
     exit;
 }
 
-// =========================================================
-// PROCESAMIENTO
-// =========================================================
+// ======================================================
+// PROCESAR COTIZACIÓN
+// ======================================================
 
 if ($isPost) {
 
     try {
 
-        if (
-            !isset($_POST['csrf_token']) ||
-            !hash_equals(
-                $_SESSION['m6_token'],
-                (string)$_POST['csrf_token']
-            )
-        ) {
+        $token = isset($_POST['csrf_token'])
+            ? (string)$_POST['csrf_token']
+            : '';
+
+        if (!hash_equals($_SESSION['m6_token'], $token)) {
             throw new InvalidArgumentException(
-                'La sesión expiró. Actualizá la página.'
+                'La sesión expiró. Recargá la página.'
             );
         }
 
-        $data['peso_volumetrico'] =
-            getNumber($_POST, 'peso_volumetrico');
+        $data['peso_volumetrico'] = getNumber($_POST, 'peso_volumetrico');
+        $data['tarifa_min'] = getNumber($_POST, 'tarifa_min');
+        $data['tarifa_aplicar'] = getNumber($_POST, 'tarifa_aplicar');
+        $data['cargos_agente'] = getNumber($_POST, 'cargos_agente');
+        $data['other'] = getNumber($_POST, 'other');
 
-        $data['tarifa_min'] =
-            getNumber($_POST, 'tarifa_min');
-
-        $data['tarifa_aplicar'] =
-            getNumber($_POST, 'tarifa_aplicar');
-
-        $data['cargos_agente'] =
-            getNumber($_POST, 'cargos_agente');
-
-        $data['other'] =
-            getNumber($_POST, 'other');
-
-        $data['fuel_escalation_rate'] =
-            getNumber($_POST, 'fuel_escalation_rate', 0.20);
+        $data['fuel_escalation_rate'] = getNumber(
+            $_POST,
+            'fuel_escalation_rate',
+            0.20
+        );
 
         if ($data['fuel_escalation_rate'] > 1) {
             throw new InvalidArgumentException(
@@ -269,34 +234,28 @@ if ($isPost) {
             );
         }
 
-        $data['peak_season'] =
-            $_POST['peak_season'] ?? '';
+        $data['peak_season'] = isset($_POST['peak_season'])
+            ? (string)$_POST['peak_season']
+            : '';
 
-        if (!in_array(
-            $data['peak_season'],
-            ['', 'okra', 'general'],
-            true
-        )) {
-            throw new InvalidArgumentException(
-                'La modalidad Peak Season no es válida.'
-            );
+        if (!in_array($data['peak_season'], ['', 'okra', 'general'], true)) {
+            throw new InvalidArgumentException('Peak Season inválido.');
         }
 
         $data['collect_fee'] = isset($_POST['collect_fee']);
         $data['iva'] = isset($_POST['iva']);
         $data['fuel_escalation'] = isset($_POST['fuel_escalation']);
 
-        // VALIDACIÓN DEL PESO
         if ($data['peso_volumetrico'] <= 0) {
             throw new InvalidArgumentException(
                 'El peso volumétrico debe ser mayor que cero.'
             );
         }
 
-        // CÁLCULO DEFINITIVO
-        $results = calculate($data);
+        // CÁLCULO DEFINITIVO EN PHP
+        $results = calculateM6($data);
 
-        // HISTORIAL
+        // GUARDAR HISTORIAL
         $record = [
             'id' => bin2hex(random_bytes(4)),
             'date' => date('d/m/Y H:i:s'),
@@ -304,10 +263,7 @@ if ($isPost) {
             'results' => $results
         ];
 
-        array_unshift(
-            $_SESSION['m6_history'],
-            $record
-        );
+        array_unshift($_SESSION['m6_history'], $record);
 
         $_SESSION['m6_history'] = array_slice(
             $_SESSION['m6_history'],
@@ -315,11 +271,11 @@ if ($isPost) {
             MAX_HISTORY
         );
 
-    } catch (InvalidArgumentException $e) {
+    } catch (InvalidArgumentException $exception) {
 
-        $errors[] = $e->getMessage();
+        $errors[] = $exception->getMessage();
 
-    } catch (Throwable $e) {
+    } catch (Throwable $exception) {
 
         $errors[] = 'Ocurrió un error al procesar la cotización.';
     }
@@ -349,29 +305,9 @@ $history = $_SESSION['m6_history'];
 
 <style>
 
-/* =====================================================
-   VARIABLES
-===================================================== */
-
-:root {
-    --bg: #080e1c;
-    --panel: #101a2e;
-    --panel-light: #15223a;
-    --border: rgba(148,163,184,.13);
-
-    --primary: #38bdf8;
-    --primary-dark: #2563eb;
-
-    --success: #22c55e;
-    --danger: #f87171;
-
-    --text: #f1f5f9;
-    --muted: #94a3b8;
-
-    --radius: 18px;
-}
-
-/* RESET */
+/* ======================================================
+   RESET Y CONFIGURACIÓN GLOBAL
+====================================================== */
 
 * {
     margin: 0;
@@ -379,53 +315,80 @@ $history = $_SESSION['m6_history'];
     box-sizing: border-box;
 }
 
+html {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+}
+
 body {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+
     font-family: 'Inter', sans-serif;
+    color: #f1f5f9;
 
     background:
-        radial-gradient(ellipse at top left, #12305b 0%, transparent 35%),
-        radial-gradient(ellipse at bottom right, #102747 0%, transparent 35%),
-        var(--bg);
+        radial-gradient(ellipse at 10% 0%, rgba(14,165,233,.16), transparent 35%),
+        radial-gradient(ellipse at 95% 90%, rgba(37,99,235,.12), transparent 35%),
+        #080e1c;
 
-    min-height: 100vh;
-    color: var(--text);
-    padding: 35px 18px;
+    padding: 35px 20px;
 }
 
 button, input, select {
     font-family: inherit;
 }
 
-.container {
-    max-width: 1050px;
-    margin: auto;
+button {
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* HEADER */
+/* ======================================================
+   CONTENEDOR CENTRADO
+====================================================== */
+
+.container {
+    display: block;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* ======================================================
+   HEADER
+====================================================== */
 
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 }
 
 .brand {
     display: flex;
     align-items: center;
     gap: 15px;
+    min-width: 0;
 }
 
 .brand-icon {
     width: 58px;
     height: 58px;
+    flex-shrink: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     border-radius: 17px;
 
     background: linear-gradient(135deg, #0ea5e9, #2563eb);
+
     box-shadow: 0 8px 30px rgba(14,165,233,.25);
 
     font-size: 25px;
@@ -438,10 +401,10 @@ button, input, select {
 }
 
 .brand p {
-    font-size: 12px;
-    color: var(--muted);
+    font-size: 11px;
+    color: #94a3b8;
     margin-top: 5px;
-    letter-spacing: 1.3px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
 }
 
@@ -449,13 +412,17 @@ button, input, select {
     display: flex;
     align-items: center;
     gap: 8px;
+
     background: rgba(34,197,94,.09);
     border: 1px solid rgba(34,197,94,.2);
+
     padding: 10px 14px;
     border-radius: 30px;
+
     color: #4ade80;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .status-dot {
@@ -466,27 +433,34 @@ button, input, select {
     box-shadow: 0 0 10px #22c55e;
 }
 
-/* PANEL */
+/* ======================================================
+   PANELES
+====================================================== */
 
-.panel {
-    background: rgba(16,26,46,.92);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 30px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.25);
-    backdrop-filter: blur(15px);
+.panel,
+.history-card {
+    width: 100%;
+    min-width: 0;
+
+    background: rgba(16,26,46,.94);
+    border: 1px solid rgba(148,163,184,.13);
+    border-radius: 22px;
+
+    padding: 28px;
+
+    box-shadow: 0 20px 55px rgba(0,0,0,.22);
 }
 
 .section-heading {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 13px;
     margin-bottom: 25px;
 }
 
-.section-heading i {
-    color: var(--primary);
-    font-size: 19px;
+.section-heading > i {
+    color: #38bdf8;
+    font-size: 21px;
 }
 
 .section-heading h2 {
@@ -495,16 +469,18 @@ button, input, select {
 }
 
 .section-heading p {
-    color: var(--muted);
+    color: #94a3b8;
     font-size: 12px;
     margin-top: 5px;
 }
 
-/* FORMULARIO */
+/* ======================================================
+   FORMULARIO
+====================================================== */
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -512,9 +488,10 @@ button, input, select {
     display: flex;
     flex-direction: column;
     gap: 9px;
+    min-width: 0;
 }
 
-label {
+.form-group label {
     color: #cbd5e1;
     font-size: 12px;
     font-weight: 600;
@@ -522,90 +499,122 @@ label {
 
 .input-wrapper {
     position: relative;
+    width: 100%;
+    min-width: 0;
 }
 
-.input-wrapper i {
+.input-wrapper > i {
     position: absolute;
     top: 50%;
     left: 15px;
     transform: translateY(-50%);
+
     color: #64748b;
     font-size: 14px;
+
     pointer-events: none;
 }
 
-input, select {
+.input-wrapper input,
+.input-wrapper select {
     width: 100%;
     height: 49px;
-    background: #0b1426;
-    border: 1px solid var(--border);
+
+    border: 1px solid rgba(148,163,184,.15);
     border-radius: 12px;
-    color: white;
-    font-size: 14px;
-    padding: 0 15px 0 43px;
+
+    background: #0b1426;
+    color: #f8fafc;
+
+    font-size: 13px;
+
     outline: none;
     transition: .25s;
 }
 
-select {
-    padding-left: 15px;
+.input-wrapper input {
+    padding: 0 15px 0 43px;
+}
+
+.input-wrapper select {
+    padding: 0 35px 0 43px;
     cursor: pointer;
 }
 
-input:focus, select:focus {
-    border-color: var(--primary);
+.input-wrapper input:focus,
+.input-wrapper select:focus {
+    border-color: #38bdf8;
     box-shadow: 0 0 0 3px rgba(56,189,248,.10);
 }
 
-input::placeholder {
+.input-wrapper input::placeholder {
     color: #64748b;
 }
 
-/* OPCIONES */
+.input-wrapper select option {
+    background: #0b1426;
+}
+
+/* ======================================================
+   OPCIONES
+====================================================== */
 
 .options-title {
-    margin: 30px 0 15px;
-    font-size: 13px;
+    margin: 28px 0 15px;
     color: #cbd5e1;
+    font-size: 13px;
     font-weight: 700;
+}
+
+.options-title i {
+    color: #38bdf8;
+    margin-right: 5px;
 }
 
 .options-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
 }
 
 .option-card {
-    background: #0b1426;
-    border: 1px solid var(--border);
-    border-radius: 13px;
-    padding: 15px;
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 10px;
+
+    min-width: 0;
+    padding: 15px;
+
+    background: #0b1426;
+    border: 1px solid rgba(148,163,184,.14);
+    border-radius: 12px;
+
     cursor: pointer;
     transition: .2s;
 }
 
 .option-card:hover {
     border-color: rgba(56,189,248,.5);
+    background: #101e34;
 }
 
 .option-card input {
     width: 17px;
     height: 17px;
-    padding: 0;
+    flex-shrink: 0;
     accent-color: #0ea5e9;
     cursor: pointer;
 }
 
 .option-card span {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
+    color: #cbd5e1;
 }
 
-/* BOTONES */
+/* ======================================================
+   BOTONES
+====================================================== */
 
 .button-group {
     display: flex;
@@ -615,35 +624,40 @@ input::placeholder {
 
 .btn {
     min-height: 48px;
-    border: none;
-    border-radius: 12px;
-    padding: 0 22px;
+    padding: 0 20px;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 9px;
-    font-size: 13px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-size: 12px;
     font-weight: 700;
-    cursor: pointer;
-    transition: .25s;
+
     text-decoration: none;
+    cursor: pointer;
+
+    transition: .2s;
 }
 
 .btn-primary {
+    flex: 1;
     color: white;
     background: linear-gradient(100deg, #0ea5e9, #2563eb);
-    flex: 1;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(37,99,235,.3);
+    box-shadow: 0 8px 24px rgba(37,99,235,.3);
 }
 
 .btn-secondary {
     color: #cbd5e1;
     background: #1e293b;
-    border: 1px solid var(--border);
+    border-color: rgba(148,163,184,.12);
 }
 
 .btn-secondary:hover {
@@ -653,49 +667,54 @@ input::placeholder {
 .btn-copy {
     color: #38bdf8;
     background: rgba(56,189,248,.10);
-    border: 1px solid rgba(56,189,248,.2);
+    border-color: rgba(56,189,248,.2);
 }
 
 .btn-copy:hover {
     background: rgba(56,189,248,.18);
 }
 
-/* RESULTADOS */
+/* ======================================================
+   RESULTADOS
+====================================================== */
 
 .result-section {
-    margin-top: 28px;
+    width: 100%;
+    margin-top: 25px;
 }
 
 .result-card {
+    width: 100%;
+    padding: 26px;
+
     background: linear-gradient(145deg, #111f36, #0c1729);
-    border: 1px solid rgba(56,189,248,.18);
+    border: 1px solid rgba(56,189,248,.19);
     border-radius: 20px;
-    padding: 25px;
 }
 
 .result-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 23px;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
 .result-header h2 {
-    font-size: 17px;
+    font-size: 16px;
 }
 
-.result-header span {
+.result-header h2 i {
     color: #38bdf8;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    margin-right: 6px;
 }
 
-.result-list {
-    display: flex;
-    flex-direction: column;
+.live-label {
+    color: #38bdf8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .result-row {
@@ -703,9 +722,12 @@ input::placeholder {
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-    padding: 13px 0;
-    border-bottom: 1px solid rgba(255,255,255,.06);
-    font-size: 13px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid rgba(255,255,255,.055);
+
+    font-size: 12px;
 }
 
 .result-row span:first-child {
@@ -713,24 +735,28 @@ input::placeholder {
 }
 
 .result-row strong {
+    color: #e2e8f0;
+    font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .result-row.subtotal {
-    margin-top: 10px;
-    border-bottom: none;
+    border: none;
+    padding-top: 18px;
 }
 
 .result-row.subtotal strong {
     color: #38bdf8;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .total-box {
-    margin-top: 20px;
+    margin-top: 16px;
     padding: 23px;
-    border-radius: 16px;
+
+    border-radius: 15px;
 
     background: linear-gradient(
         120deg,
@@ -743,18 +769,18 @@ input::placeholder {
 }
 
 .total-box p {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
     color: #86efac;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 .total-box h3 {
-    margin-top: 9px;
-    font-size: 36px;
-    font-weight: 800;
+    margin-top: 10px;
     color: #4ade80;
+    font-size: 35px;
+    font-weight: 800;
     letter-spacing: -1px;
     font-variant-numeric: tabular-nums;
 }
@@ -765,23 +791,26 @@ input::placeholder {
     margin-top: 18px;
 }
 
-/* HISTORIAL */
-
-.history-section {
-    margin-top: 28px;
+.copy-feedback {
+    min-height: 16px;
+    margin-top: 10px;
+    color: #4ade80;
+    font-size: 11px;
+    text-align: center;
 }
 
-.history-card {
-    background: rgba(16,26,46,.92);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 25px;
+/* ======================================================
+   HISTORIAL
+====================================================== */
+
+.history-section {
+    margin-top: 25px;
 }
 
 .history-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     margin-bottom: 20px;
 }
@@ -790,11 +819,16 @@ input::placeholder {
     font-size: 16px;
 }
 
-.history-count {
-    background: rgba(56,189,248,.10);
+.history-header h2 i {
     color: #38bdf8;
+    margin-right: 7px;
+}
+
+.history-count {
     padding: 6px 11px;
     border-radius: 20px;
+    background: rgba(56,189,248,.1);
+    color: #38bdf8;
     font-size: 11px;
     font-weight: 700;
 }
@@ -809,105 +843,152 @@ input::placeholder {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    background: #0b1426;
-    border: 1px solid var(--border);
-    border-radius: 13px;
+    gap: 12px;
+
     padding: 15px;
+
+    background: #0b1426;
+    border: 1px solid rgba(148,163,184,.12);
+    border-radius: 12px;
+}
+
+.history-item b {
+    font-size: 12px;
 }
 
 .history-item p {
-    color: var(--muted);
-    font-size: 11px;
-    margin-top: 5px;
+    color: #94a3b8;
+    font-size: 10px;
+    margin-top: 6px;
 }
 
 .history-item strong {
     color: #4ade80;
-    font-size: 15px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
 .empty-history {
-    text-align: center;
     padding: 30px;
+    text-align: center;
     color: #64748b;
 }
 
 .empty-history i {
+    display: block;
     font-size: 30px;
     margin-bottom: 12px;
 }
 
-/* ALERTAS */
+.history-footer {
+    margin-top: 18px;
+}
+
+/* ======================================================
+   ALERTAS
+====================================================== */
 
 .alert {
-    padding: 14px 16px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    font-size: 13px;
+    padding: 13px 15px;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    font-size: 12px;
 }
 
 .alert-error {
-    background: rgba(239,68,68,.10);
     color: #fca5a5;
+    background: rgba(239,68,68,.1);
     border: 1px solid rgba(239,68,68,.2);
 }
 
-/* FOOTER */
+/* ======================================================
+   FOOTER
+====================================================== */
 
 .footer {
-    text-align: center;
     margin-top: 28px;
+    padding: 15px;
+    text-align: center;
     color: #64748b;
-    font-size: 11px;
-    letter-spacing: .5px;
+    font-size: 10px;
+    line-height: 1.8;
+    letter-spacing: .7px;
 }
 
 .footer strong {
     color: #94a3b8;
 }
 
-/* RESPONSIVE */
+/* ======================================================
+   TABLET
+====================================================== */
 
-@media(max-width:700px) {
+@media (max-width: 900px) {
 
-    body {
-        padding: 20px 12px;
+    .container {
+        max-width: 760px;
     }
 
-    .panel, .history-card {
-        padding: 20px;
+}
+
+/* ======================================================
+   MÓVIL
+====================================================== */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 16px 11px;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 100%;
     }
 
     .header {
-        align-items: flex-start;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .brand-icon {
+        width: 49px;
+        height: 49px;
+        font-size: 21px;
     }
 
     .brand h1 {
-        font-size: 22px;
+        font-size: 21px;
+    }
+
+    .brand p {
+        font-size: 9px;
     }
 
     .status {
-        font-size: 0;
-        padding: 12px;
+        padding: 8px 11px;
+        font-size: 10px;
     }
 
-    .status-dot {
-        width: 9px;
-        height: 9px;
+    .panel,
+    .history-card,
+    .result-card {
+        padding: 18px;
+        border-radius: 17px;
     }
 
     .form-grid {
-        grid-template-columns: 1fr;
-        gap: 17px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
     }
 
     .options-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .button-group, .result-actions {
+    .button-group,
+    .result-actions {
         flex-direction: column;
     }
 
@@ -915,9 +996,37 @@ input::placeholder {
         width: 100%;
     }
 
+    .result-header h2 {
+        font-size: 14px;
+    }
+
     .total-box h3 {
         font-size: 30px;
     }
+
+    .history-item {
+        padding: 12px;
+    }
+
+    .history-item strong {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 360px) {
+
+    .brand h1 {
+        font-size: 18px;
+    }
+
+    .result-row {
+        font-size: 11px;
+    }
+
+    .result-row strong {
+        font-size: 11px;
+    }
+
 }
 
 </style>
@@ -952,7 +1061,7 @@ input::placeholder {
 
     </header>
 
-    <!-- CALCULADORA -->
+    <!-- FORMULARIO -->
 
     <main class="panel">
 
@@ -971,7 +1080,7 @@ input::placeholder {
 
             <div class="alert alert-error">
                 <i class="fas fa-circle-exclamation"></i>
-                <?= escape($error) ?>
+                <?= e($error) ?>
             </div>
 
         <?php endforeach; ?>
@@ -981,7 +1090,7 @@ input::placeholder {
             <input
                 type="hidden"
                 name="csrf_token"
-                value="<?= escape($_SESSION['m6_token']) ?>"
+                value="<?= e($_SESSION['m6_token']) ?>"
             >
 
             <div class="form-grid">
@@ -1003,7 +1112,7 @@ input::placeholder {
                             step="0.01"
                             placeholder="Ej. 150"
                             required
-                            value="<?= escape($data['peso_volumetrico']) ?>"
+                            value="<?= e($data['peso_volumetrico']) ?>"
                         >
                     </div>
 
@@ -1025,7 +1134,7 @@ input::placeholder {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= escape($data['tarifa_min']) ?>"
+                            value="<?= e($data['tarifa_min']) ?>"
                         >
                     </div>
 
@@ -1047,7 +1156,7 @@ input::placeholder {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= escape($data['tarifa_aplicar']) ?>"
+                            value="<?= e($data['tarifa_aplicar']) ?>"
                         >
                     </div>
 
@@ -1069,7 +1178,7 @@ input::placeholder {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= escape($data['cargos_agente']) ?>"
+                            value="<?= e($data['cargos_agente']) ?>"
                         >
                     </div>
 
@@ -1091,7 +1200,7 @@ input::placeholder {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= escape($data['other']) ?>"
+                            value="<?= e($data['other']) ?>"
                         >
                     </div>
 
@@ -1145,7 +1254,7 @@ input::placeholder {
                             min="0"
                             max="1"
                             step="0.01"
-                            value="<?= escape($data['fuel_escalation_rate']) ?>"
+                            value="<?= e($data['fuel_escalation_rate']) ?>"
                         >
                     </div>
 
@@ -1153,7 +1262,7 @@ input::placeholder {
 
             </div>
 
-            <!-- OPCIONES -->
+            <!-- CARGOS ADICIONALES -->
 
             <h3 class="options-title">
                 <i class="fas fa-sliders"></i>
@@ -1240,9 +1349,9 @@ input::placeholder {
                     Resumen de cotización
                 </h2>
 
-                <span>
+                <span class="live-label">
                     <i class="fas fa-bolt"></i>
-                    En vivo
+                    EN VIVO
                 </span>
 
             </div>
@@ -1327,6 +1436,8 @@ input::placeholder {
 
             </div>
 
+            <div class="copy-feedback" id="copyFeedback"></div>
+
         </div>
 
     </section>
@@ -1358,9 +1469,7 @@ input::placeholder {
 
                         <i class="fas fa-folder-open"></i>
 
-                        <p>
-                            Todavía no hay cotizaciones guardadas.
-                        </p>
+                        <p>Todavía no hay cotizaciones guardadas.</p>
 
                     </div>
 
@@ -1373,22 +1482,24 @@ input::placeholder {
                             <div>
 
                                 <b>
-                                    Cotización #<?= escape($item['id']) ?>
+                                    Cotización #<?= e($item['id']) ?>
                                 </b>
 
                                 <p>
-                                    <?= escape($item['date']) ?>
+                                    <?= e($item['date']) ?>
                                     · Peso:
                                     <?= number_format(
-                                        $item['data']['peso_volumetrico'],
-                                        2
+                                        (float)$item['data']['peso_volumetrico'],
+                                        2,
+                                        '.',
+                                        ','
                                     ) ?> kg
                                 </p>
 
                             </div>
 
                             <strong>
-                                <?= money($item['results']['total']) ?>
+                                <?= usd($item['results']['total']) ?>
                             </strong>
 
                         </div>
@@ -1401,12 +1512,12 @@ input::placeholder {
 
             <?php if (!empty($history)): ?>
 
-                <div style="margin-top:18px;">
+                <div class="history-footer">
 
                     <a
-                        href="?clear_history=1&amp;token=<?= escape($_SESSION['m6_token']) ?>"
+                        href="?clear_history=1&amp;token=<?= e($_SESSION['m6_token']) ?>"
                         class="btn btn-secondary"
-                        onclick="return confirm('¿Seguro que querés borrar todo el historial?')"
+                        onclick="return confirm('¿Eliminar todas las cotizaciones del historial?')"
                     >
                         <i class="fas fa-trash"></i>
                         Borrar historial
@@ -1426,10 +1537,13 @@ input::placeholder {
 
         SISTEMA M6 © <?= date('Y') ?>
 
-        <br><br>
+        <br>
 
         <strong>VALIDACIÓN DE GUÍAS</strong>
-        · USD · PREMIUM EDITION
+
+        <br>
+
+        PREMIUM EDITION · USD
 
     </footer>
 
@@ -1437,9 +1551,9 @@ input::placeholder {
 
 <script>
 
-/* =====================================================
-   SISTEMA M6 - CÁLCULOS AUTOMÁTICOS
-===================================================== */
+/* ======================================================
+   SISTEMA M6 - MOTOR AUTOMÁTICO
+====================================================== */
 
 const form = document.getElementById('calcForm');
 
@@ -1463,11 +1577,11 @@ function getValue(id) {
         : 0;
 }
 
-function getChecked(id) {
+function isChecked(id) {
     return document.getElementById(id).checked;
 }
 
-function setMoney(id, value) {
+function showMoney(id, value) {
 
     document.getElementById(id).textContent =
         formatter.format(value);
@@ -1486,9 +1600,9 @@ function calculateLive() {
     const peakSeason =
         document.getElementById('peak_season').value;
 
-    const collectEnabled = getChecked('collect_fee');
-    const ivaEnabled = getChecked('iva');
-    const fuelEnabled = getChecked('fuel_escalation');
+    const collectEnabled = isChecked('collect_fee');
+    const ivaEnabled = isChecked('iva');
+    const fuelEnabled = isChecked('fuel_escalation');
 
     // FLETE
     const flete = tarifaMin > 0
@@ -1496,17 +1610,17 @@ function calculateLive() {
         : tarifaAplicar * peso;
 
     // FUEL
-    const fuel = peso > 0
+    const fuel = peso
         ? Math.max(15, 0.44 * peso)
         : 0;
 
     // SECURITY
-    const security = peso > 0
+    const security = peso
         ? Math.max(10, 0.10 * peso)
         : 0;
 
     // PBA
-    const pba = cargosAgente > 0
+    const pba = cargosAgente
         ? Math.max(35, cargosAgente * 0.12)
         : 0;
 
@@ -1518,9 +1632,7 @@ function calculateLive() {
 
     if (peakSeason === 'okra') {
         peak = Math.max(10, 0.02 * peso);
-    }
-
-    if (peakSeason === 'general') {
+    } else if (peakSeason === 'general') {
         peak = Math.max(10, 0.05 * peso);
     }
 
@@ -1534,7 +1646,7 @@ function calculateLive() {
         ? collectFee
         : 0;
 
-    // SUBTOTAL
+    // SUBTOTAL ORIGINAL
     const subtotal =
         flete +
         fuel +
@@ -1554,21 +1666,22 @@ function calculateLive() {
     // TOTAL
     const total = subtotal + iva;
 
-    // MOSTRAR RESULTADOS
-    setMoney('r_flete', flete);
-    setMoney('r_fuel', fuel);
-    setMoney('r_fuel_escalation', fuelEscalation);
-    setMoney('r_security', security);
-    setMoney('r_pba', pba);
-    setMoney('r_cargos_agente', cargosAgente);
-    setMoney('r_other', other);
-    setMoney('r_collect_fee', collectApplied);
-    setMoney('r_peak_season', peak);
-    setMoney('r_subtotal', subtotal);
-    setMoney('r_iva', iva);
-    setMoney('r_total', total);
+    // ACTUALIZAR PANTALLA
+    showMoney('r_flete', flete);
+    showMoney('r_fuel', fuel);
+    showMoney('r_fuel_escalation', fuelEscalation);
+    showMoney('r_security', security);
+    showMoney('r_pba', pba);
+    showMoney('r_cargos_agente', cargosAgente);
+    showMoney('r_other', other);
+    showMoney('r_collect_fee', collectApplied);
+    showMoney('r_peak_season', peak);
+    showMoney('r_subtotal', subtotal);
+    showMoney('r_iva', iva);
+    showMoney('r_total', total);
 
     return {
+        peso,
         flete,
         fuel,
         fuelEscalation,
@@ -1584,32 +1697,33 @@ function calculateLive() {
     };
 }
 
-/* ACTUALIZACIÓN EN TIEMPO REAL */
+/* ======================================================
+   ACTUALIZACIÓN EN TIEMPO REAL
+====================================================== */
 
 form.addEventListener('input', calculateLive);
 form.addEventListener('change', calculateLive);
 
 calculateLive();
 
-/* LIMPIAR */
+/* ======================================================
+   LIMPIAR - UN CLIC, SIN PREGUNTAS
+   CONSERVA EL HISTORIAL
+====================================================== */
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-
-    if (!confirm('¿Querés limpiar todos los campos?')) {
-        return;
-    }
+document.getElementById('resetBtn').addEventListener('click', function() {
 
     window.location.href = window.location.pathname;
 
 });
 
-/* COPIAR RESUMEN */
+/* ======================================================
+   COPIAR RESUMEN
+====================================================== */
 
-document.getElementById('copyBtn').addEventListener('click', async () => {
+document.getElementById('copyBtn').addEventListener('click', async function() {
 
     const result = calculateLive();
-
-    const peso = getValue('peso_volumetrico');
 
     const peak = document.getElementById('peak_season');
 
@@ -1622,11 +1736,11 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
 
     const lines = [
         '================================',
-        '       SISTEMA M6',
-        '    VALIDACIÓN DE GUÍAS',
+        '          SISTEMA M6',
+        '       VALIDACIÓN DE GUÍAS',
         '================================',
         '',
-        'Peso volumétrico: ' + peso.toFixed(2) + ' kg',
+        'Peso volumétrico: ' + result.peso.toFixed(2) + ' kg',
         'Peak Season: ' + peakLabel,
         '',
         'DETALLE DE CARGOS',
@@ -1647,31 +1761,59 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
         'TOTAL: ' + formatter.format(result.total),
         '',
         '================================',
-        '       SISTEMA M6',
+        '          SISTEMA M6',
         '================================'
     ];
 
     const text = lines.join('\n');
 
+    const feedback = document.getElementById('copyFeedback');
     const button = document.getElementById('copyBtn');
 
     try {
 
-        await navigator.clipboard.writeText(text);
+        if (navigator.clipboard && window.isSecureContext) {
+
+            await navigator.clipboard.writeText(text);
+
+        } else {
+
+            const textarea = document.createElement('textarea');
+
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            const copied = document.execCommand('copy');
+
+            textarea.remove();
+
+            if (!copied) {
+                throw new Error('No se pudo copiar');
+            }
+        }
+
+        feedback.textContent = '✓ Resumen copiado correctamente';
 
         button.innerHTML =
             '<i class="fas fa-check"></i> ¡Copiado!';
 
-        setTimeout(() => {
+        setTimeout(function() {
 
             button.innerHTML =
                 '<i class="fas fa-copy"></i> Copiar resumen';
 
-        }, 2000);
+            feedback.textContent = '';
+
+        }, 2500);
 
     } catch (error) {
 
-        alert('No se pudo copiar. Verificá los permisos del navegador.');
+        feedback.textContent =
+            'No se pudo copiar. Revisá los permisos del navegador.';
 
     }
 
