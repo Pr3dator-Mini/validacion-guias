@@ -1344,12 +1344,12 @@ button, input, select {
         <div class="itinerary-layout">
           <div class="itinerary-card">
             <h3><i class="fas fa-sliders"></i> Datos del vuelo</h3>
-            <p>La escala en SAL se calcula con 1 hora y 30 minutos de atención. El vuelo SAL–MIA se calcula con 2 horas y 30 minutos.</p>
+            <p>Ingresá la hora de salida desde MIA en hora de El Salvador o Zulu. El vuelo MIA–SAL tarda 2 h 30 min; en SAL se atiende durante 1 h 30 min y el vuelo SAL–MIA tarda otras 2 h 30 min.</p>
             <div class="itinerary-grid">
               <div class="itinerary-field full"><label for="itFlight">Número de vuelo</label><input id="itFlight" type="text" placeholder="Ej. 720M6" value="720M6"></div>
-              <div class="itinerary-field full"><label for="itDate">Fecha de ETA en SAL / fecha UTC si ingresás Zulu</label><input id="itDate" type="date"></div>
+              <div class="itinerary-field full"><label for="itDate">Fecha de salida desde MIA / fecha UTC si ingresás Zulu</label><input id="itDate" type="date"></div>
               <div class="itinerary-field"><label for="itTimeMode">Formato de hora ingresada</label><select id="itTimeMode"><option value="local">Hora local de El Salvador</option><option value="zulu">Hora Zulu (UTC)</option></select></div>
-              <div class="itinerary-field"><label for="itEtaInput">ETA arriving at SAL</label><input id="itEtaInput" type="time" value="02:00"></div>
+              <div class="itinerary-field"><label for="itEtaInput">Hora de salida desde MIA</label><input id="itEtaInput" type="time" value="02:00"></div>
             </div>
             <div class="itinerary-results" aria-live="polite">
               <div class="itinerary-result"><div><span>ETA arriving at SAL</span><small id="itSalDate">Hora local de El Salvador</small></div><strong id="itEtaSal">02:00 a.m.</strong></div>
@@ -1485,23 +1485,33 @@ function buildItineraryInstant(dateValue,timeValue,mode){
     return new Date(mode==='zulu'?utcBase:utcBase+6*60*60000);
 }
 function updateItinerary(){
-    const instant=buildItineraryInstant(itDate.value,itEtaInput.value,itTimeMode.value);
-    if(!instant){document.getElementById('itineraryMessage').value='Ingresá la fecha y la hora para generar la actualización.';return;}
-    const etd=new Date(instant.getTime()+90*60000);
+    // La hora ingresada representa la salida desde MIA. Primero se interpreta
+    // como hora local de El Salvador o como Zulu; luego se suma el vuelo MIA-SAL.
+    const salidaMiaBase=buildItineraryInstant(itDate.value,itEtaInput.value,itTimeMode.value);
+    if(!salidaMiaBase){document.getElementById('itineraryMessage').value='Ingresá la fecha y la hora para generar la actualización.';return;}
+
+    // Tramo MIA-SAL: 2 h 30 min. Esta es la ETA real de llegada a SAL.
+    const etaSal=new Date(salidaMiaBase.getTime()+150*60000);
+    // Atención y despacho en SAL: 1 h 30 min.
+    const etd=new Date(etaSal.getTime()+90*60000);
+    // Tramo SAL-MIA: 2 h 30 min.
     const mia=new Date(etd.getTime()+150*60000);
-    const etaSalText=itFormatter12.format(instant).replace(' AM',' a.m.').replace(' PM',' p.m.');
+
+    const etaSalText=itFormatter12.format(etaSal).replace(' AM',' a.m.').replace(' PM',' p.m.');
     const etdSalText=itFormatter12.format(etd).replace(' AM',' a.m.').replace(' PM',' p.m.');
     const miaText=itFormatter24Mia.format(mia);
     const miaParts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',timeZoneName:'short'}).formatToParts(mia);
     const miaZone=(miaParts.find(p=>p.type==='timeZoneName')||{}).value||'Miami';
+
     document.getElementById('itEtaSal').textContent=etaSalText;
     document.getElementById('itEtdSal').textContent=etdSalText;
     document.getElementById('itEtaMia').textContent=miaText+' hrs.';
-    document.getElementById('itSalDate').textContent='Fecha SAL: '+itDateSalFmt.format(instant);
+    document.getElementById('itSalDate').textContent='Fecha SAL: '+itDateSalFmt.format(etaSal);
     document.getElementById('itMiamiZone').textContent='Hora local de Miami · '+miaZone+' · '+itDateMiaFmt.format(mia);
+
     const message=`Buen dia estimados.
 
-Les comparto actualización vuelo ${itFlight.value.trim()||'________'}:
+Les comparto actualización Del vuelo ${itFlight.value.trim()||'________'}:
 
 ETA arriving at SAL: ${etaSalText}
 ETD departing from SAL: ${etdSalText}
