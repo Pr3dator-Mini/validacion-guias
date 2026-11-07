@@ -1344,12 +1344,12 @@ button, input, select {
         <div class="itinerary-layout">
           <div class="itinerary-card">
             <h3><i class="fas fa-sliders"></i> Datos del vuelo</h3>
-            <p>Ingresá la hora de salida desde MIA en hora de El Salvador o Zulu. El vuelo MIA–SAL tarda 2 h 30 min; en SAL se atiende durante 1 h 30 min y el vuelo SAL–MIA tarda otras 2 h 30 min.</p>
+            <p>Si elegís hora local de El Salvador, ingresá directamente la ETA de arribo a SAL. Si elegís Zulu, ingresá la hora de salida desde MIA en UTC. El vuelo dura 2 h 30 min; en SAL se atiende durante 1 h 30 min y el regreso a MIA tarda otras 2 h 30 min.</p>
             <div class="itinerary-grid">
               <div class="itinerary-field full"><label for="itFlight">Número de vuelo</label><input id="itFlight" type="text" placeholder="Ej. 720M6" value="720M6"></div>
-              <div class="itinerary-field full"><label for="itDate">Fecha de salida desde MIA / fecha UTC si ingresás Zulu</label><input id="itDate" type="date"></div>
+              <div class="itinerary-field full"><label for="itDate" id="itDateLabel">Fecha de arribo en SAL</label><input id="itDate" type="date"></div>
               <div class="itinerary-field"><label for="itTimeMode">Formato de hora ingresada</label><select id="itTimeMode"><option value="local">Hora local de El Salvador</option><option value="zulu">Hora Zulu (UTC)</option></select></div>
-              <div class="itinerary-field"><label for="itEtaInput">Hora de salida desde MIA</label><input id="itEtaInput" type="time" value="02:00"></div>
+              <div class="itinerary-field"><label for="itEtaInput" id="itEtaInputLabel">Hora de arribo en El Salvador</label><input id="itEtaInput" type="time" value="02:00"></div>
             </div>
             <div class="itinerary-results" aria-live="polite">
               <div class="itinerary-result"><div><span>ETA arriving at SAL</span><small id="itSalDate">Hora local de El Salvador</small></div><strong id="itEtaSal">02:00 a.m.</strong></div>
@@ -1485,13 +1485,16 @@ function buildItineraryInstant(dateValue,timeValue,mode){
     return new Date(mode==='zulu'?utcBase:utcBase+6*60*60000);
 }
 function updateItinerary(){
-    // La hora ingresada representa la salida desde MIA. Primero se interpreta
-    // como hora local de El Salvador o como Zulu; luego se suma el vuelo MIA-SAL.
-    const salidaMiaBase=buildItineraryInstant(itDate.value,itEtaInput.value,itTimeMode.value);
-    if(!salidaMiaBase){document.getElementById('itineraryMessage').value='Ingresá la fecha y la hora para generar la actualización.';return;}
+    const isZulu=itTimeMode.value==='zulu';
+    // En modo local, la hora ingresada YA es la ETA de arribo a SAL.
+    // En modo Zulu, la hora ingresada es la salida desde MIA en UTC;
+    // por eso se suman las 2 h 30 min del tramo MIA-SAL.
+    document.getElementById('itEtaInputLabel').textContent=isZulu?'Hora de salida desde MIA':'Hora de arribo en El Salvador';
+    document.getElementById('itDateLabel').textContent=isZulu?'Fecha de salida desde MIA (UTC)':'Fecha de arribo en SAL';
+    const horaBase=buildItineraryInstant(itDate.value,itEtaInput.value,itTimeMode.value);
+    if(!horaBase){document.getElementById('itineraryMessage').value='Ingresá la fecha y la hora para generar la actualización.';return;}
 
-    // Tramo MIA-SAL: 2 h 30 min. Esta es la ETA real de llegada a SAL.
-    const etaSal=new Date(salidaMiaBase.getTime()+150*60000);
+    const etaSal=isZulu?new Date(horaBase.getTime()+150*60000):new Date(horaBase.getTime());
     // Atención y despacho en SAL: 1 h 30 min.
     const etd=new Date(etaSal.getTime()+90*60000);
     // Tramo SAL-MIA: 2 h 30 min.
