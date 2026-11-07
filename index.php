@@ -1511,7 +1511,7 @@ function updateItinerary(){
 
     const message=`Buen dia estimados.
 
-Les comparto actualización Del vuelo ${itFlight.value.trim()||'________'}:
+Les comparto actualización vuelo ${itFlight.value.trim()||'________'}:
 
 ETA arriving at SAL: ${etaSalText}
 ETD departing from SAL: ${etdSalText}
