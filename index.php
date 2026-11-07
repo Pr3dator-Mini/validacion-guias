@@ -854,12 +854,39 @@ button, input, select {
 .proforma-paper-footer{font-size:9px;color:#64748b;margin-top:32px;text-align:center}
 @media(max-width:800px){.proforma-layout{grid-template-columns:1fr}.proforma-paper{padding:20px 15px}}
 @media(max-width:480px){.proforma-grid{grid-template-columns:1fr}.proforma-field.full{grid-column:auto}.proforma-info{flex-direction:column;margin:18px 0}.proforma-dates{min-width:0}.proforma-title h2{font-size:17px}.proforma-logo{width:170px}.proforma-summary{width:100%}}
+
+
+/* ACTUALIZACION DE ITINERARIO */
+.itinerary-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.itinerary-card{background:#101a2e;border:1px solid rgba(148,163,184,.14);border-radius:16px;padding:20px;min-width:0}
+.itinerary-card h3{font-size:14px;color:#e2e8f0;margin-bottom:8px}
+.itinerary-card>p{font-size:11px;color:#94a3b8;line-height:1.6;margin-bottom:16px}
+.itinerary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.itinerary-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.itinerary-field.full{grid-column:1/-1}
+.itinerary-field label{font-size:11px;color:#cbd5e1;font-weight:600}
+.itinerary-field input,.itinerary-field select{width:100%;min-width:0;height:45px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:#0b1426;color:#f8fafc;padding:0 12px;font:inherit;font-size:12px;outline:none}
+.itinerary-field input:focus,.itinerary-field select:focus{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.1)}
+.itinerary-results{display:grid;gap:10px;margin-top:17px}
+.itinerary-result{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#0b1426;border:1px solid rgba(56,189,248,.15);border-radius:11px;padding:13px}
+.itinerary-result span{font-size:11px;color:#94a3b8}
+.itinerary-result strong{font-size:16px;color:#e0f2fe;font-variant-numeric:tabular-nums;text-align:right}
+.itinerary-result small{display:block;font-size:9px;color:#64748b;text-align:right;margin-top:3px}
+.itinerary-message{width:100%;min-height:210px;resize:vertical;background:#0b1426;color:#e2e8f0;border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:14px;font:12px/1.8 Inter,sans-serif;outline:none}
+.itinerary-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.itinerary-actions .btn{flex:1}
+.itinerary-help{font-size:10px;color:#94a3b8;line-height:1.6;margin-top:12px}
+.itinerary-live{display:inline-flex;align-items:center;gap:7px;color:#4ade80;font-size:10px;font-weight:700;margin-bottom:12px}
+.itinerary-live:before{content:"";width:7px;height:7px;background:#22c55e;border-radius:50%;box-shadow:0 0 8px #22c55e}
+@media(max-width:800px){.itinerary-layout{grid-template-columns:1fr}}
+@media(max-width:480px){.itinerary-grid{grid-template-columns:1fr}.itinerary-field.full{grid-column:auto}.itinerary-result strong{font-size:14px}}
+
 @media print{
   @page{size:A4;margin:12mm}
   html,body{background:#fff!important;padding:0!important;margin:0!important;min-height:0!important}
   body{color:#111!important}
   .container{max-width:none!important;width:100%!important;margin:0!important}
-  .header,.main-menu,.footer,#validationView,#tariffView,.proforma-controls,.proforma-section-heading{display:none!important}
+  .header,.main-menu,.footer,#validationView,#tariffView,#itineraryView,.proforma-controls,.proforma-section-heading{display:none!important}
   #proformaView{display:block!important}
   #proformaView .panel{padding:0!important;margin:0!important;background:#fff!important;border:0!important;box-shadow:none!important}
   .proforma-layout{display:block!important}
@@ -888,7 +915,7 @@ button, input, select {
 
             <div>
                 <h1>Cálculos M6</h1>
-                <p>Validación de Guías</p>
+                <p>Herramientas de operaciones aéreas</p>
             </div>
 
         </div>
@@ -909,6 +936,9 @@ button, input, select {
         </button>
         <button type="button" class="menu-card" data-view="proformaView">
             <i class="fas fa-file-invoice-dollar"></i><span><strong>Generar proforma</strong><small>Crear factura proforma e imprimir en PDF</small></span>
+        </button>
+        <button type="button" class="menu-card" data-view="itineraryView">
+            <i class="fas fa-plane-circle-check"></i><span><strong>Actualización de itinerario</strong><small>Calculá ETA, ETD y llegada a Miami</small></span>
         </button>
     </nav>
 
@@ -1305,6 +1335,53 @@ button, input, select {
     </section>
 
 
+    <section id="itineraryView" class="module-view">
+      <main class="panel">
+        <div class="section-heading">
+          <i class="fas fa-plane-circle-check"></i>
+          <div><h2>Actualización de itinerario</h2><p>Ingresá el vuelo y la ETA. Los horarios y el mensaje se actualizan automáticamente.</p></div>
+        </div>
+        <div class="itinerary-layout">
+          <div class="itinerary-card">
+            <h3><i class="fas fa-sliders"></i> Datos del vuelo</h3>
+            <p>La escala en SAL se calcula con 1 hora y 30 minutos de atención. El vuelo SAL–MIA se calcula con 2 horas y 30 minutos.</p>
+            <div class="itinerary-grid">
+              <div class="itinerary-field full"><label for="itFlight">Número de vuelo</label><input id="itFlight" type="text" placeholder="Ej. 720M6" value="720M6"></div>
+              <div class="itinerary-field full"><label for="itDate">Fecha de ETA en SAL / fecha UTC si ingresás Zulu</label><input id="itDate" type="date"></div>
+              <div class="itinerary-field"><label for="itTimeMode">Formato de hora ingresada</label><select id="itTimeMode"><option value="local">Hora local de El Salvador</option><option value="zulu">Hora Zulu (UTC)</option></select></div>
+              <div class="itinerary-field"><label for="itEtaInput">ETA arriving at SAL</label><input id="itEtaInput" type="time" value="02:00"></div>
+            </div>
+            <div class="itinerary-results" aria-live="polite">
+              <div class="itinerary-result"><div><span>ETA arriving at SAL</span><small id="itSalDate">Hora local de El Salvador</small></div><strong id="itEtaSal">02:00 a.m.</strong></div>
+              <div class="itinerary-result"><div><span>ETD departing from SAL</span><small>ETA SAL + 1 h 30 min</small></div><strong id="itEtdSal">03:30 a.m.</strong></div>
+              <div class="itinerary-result"><div><span>ETA at MIA</span><small id="itMiamiZone">Hora local de Miami</small></div><strong id="itEtaMia">07:00 hrs.</strong></div>
+            </div>
+            <p class="itinerary-help">La diferencia de Miami se calcula automáticamente con la zona horaria America/New_York y la fecha seleccionada. Así contempla UTC−5 en horario estándar y UTC−4 durante el horario de verano.</p>
+          </div>
+          <div class="itinerary-card">
+            <h3><i class="fas fa-message"></i> Mensaje listo para enviar</h3>
+            <div class="itinerary-live">ACTUALIZACIÓN EN VIVO</div>
+            <textarea id="itineraryMessage" class="itinerary-message" readonly></textarea>
+            <div class="itinerary-actions">
+              <button type="button" class="btn btn-primary" id="itCopyMessage"><i class="fas fa-copy"></i> Copiar mensaje</button>
+              <button type="button" class="btn btn-secondary" id="itClear"><i class="fas fa-rotate-left"></i> Limpiar</button>
+            </div>
+            <div class="copy-feedback" id="itFeedback"></div>
+            <p class="itinerary-help">Herramienta externa para consultar el reloj y los cambios de horario de Miami: <a href="https://www.timeanddate.com/worldclock/usa/miami" target="_blank" rel="noopener" style="color:#38bdf8">Timeanddate · Miami</a>. El cálculo del sistema no depende de esa página: utiliza las reglas horarias del navegador.</p>
+          </div>
+        </div>
+        <div class="itinerary-card" style="margin-top:18px">
+          <h3><i class="fas fa-clock"></i> Conversor Zulu → hora de El Salvador</h3>
+          <p>Podés usarlo por separado para convertir cualquier hora UTC a la hora local UTC−6.</p>
+          <div class="itinerary-grid">
+            <div class="itinerary-field"><label for="zuluDate">Fecha UTC</label><input id="zuluDate" type="date"></div>
+            <div class="itinerary-field"><label for="zuluTime">Hora Zulu (UTC)</label><input id="zuluTime" type="time" value="00:00"></div>
+          </div>
+          <div class="itinerary-result" style="margin-top:14px"><div><span>Hora local de El Salvador</span><small id="zuluLocalDate">UTC−6 · El Salvador</small></div><strong id="zuluLocalTime">06:00 p.m.</strong></div>
+        </div>
+      </main>
+    </section>
+
     <section id="proformaView" class="module-view">
       <main class="panel">
         <div class="section-heading proforma-section-heading">
@@ -1387,6 +1464,70 @@ document.querySelectorAll('[data-view]').forEach(button => {
         document.querySelectorAll('.module-view').forEach(view => view.classList.toggle('active', view.id === button.dataset.view));
     });
 });
+
+
+/* ACTUALIZACION DE ITINERARIO Y CONVERSION ZULU */
+const itDate=document.getElementById('itDate');
+const itFlight=document.getElementById('itFlight');
+const itTimeMode=document.getElementById('itTimeMode');
+const itEtaInput=document.getElementById('itEtaInput');
+const itFormatter12=new Intl.DateTimeFormat('en-US',{timeZone:'America/El_Salvador',hour:'2-digit',minute:'2-digit',hour12:true});
+const itFormatter24Mia=new Intl.DateTimeFormat('en-GB',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false});
+const itDateSalFmt=new Intl.DateTimeFormat('en-GB',{timeZone:'America/El_Salvador',day:'2-digit',month:'2-digit',year:'numeric'});
+const itDateMiaFmt=new Intl.DateTimeFormat('en-GB',{timeZone:'America/New_York',day:'2-digit',month:'2-digit',year:'numeric'});
+function isoTodayInZone(zone){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const o={};parts.forEach(p=>o[p.type]=p.value);return `${o.year}-${o.month}-${o.day}`;}
+function parseDateParts(value){const a=(value||'').split('-').map(Number);return a.length===3&&a.every(Number.isFinite)?a:null;}
+function buildItineraryInstant(dateValue,timeValue,mode){
+    const d=parseDateParts(dateValue);if(!d||!timeValue)return null;
+    const t=timeValue.split(':').map(Number);if(t.length<2||!Number.isFinite(t[0])||!Number.isFinite(t[1]))return null;
+    const utcBase=Date.UTC(d[0],d[1]-1,d[2],t[0],t[1]);
+    // La hora local de El Salvador es UTC-6 todo el año; Zulu ya es UTC.
+    return new Date(mode==='zulu'?utcBase:utcBase+6*60*60000);
+}
+function updateItinerary(){
+    const instant=buildItineraryInstant(itDate.value,itEtaInput.value,itTimeMode.value);
+    if(!instant){document.getElementById('itineraryMessage').value='Ingresá la fecha y la hora para generar la actualización.';return;}
+    const etd=new Date(instant.getTime()+90*60000);
+    const mia=new Date(etd.getTime()+150*60000);
+    const etaSalText=itFormatter12.format(instant).replace(' AM',' a.m.').replace(' PM',' p.m.');
+    const etdSalText=itFormatter12.format(etd).replace(' AM',' a.m.').replace(' PM',' p.m.');
+    const miaText=itFormatter24Mia.format(mia);
+    const miaParts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',timeZoneName:'short'}).formatToParts(mia);
+    const miaZone=(miaParts.find(p=>p.type==='timeZoneName')||{}).value||'Miami';
+    document.getElementById('itEtaSal').textContent=etaSalText;
+    document.getElementById('itEtdSal').textContent=etdSalText;
+    document.getElementById('itEtaMia').textContent=miaText+' hrs.';
+    document.getElementById('itSalDate').textContent='Fecha SAL: '+itDateSalFmt.format(instant);
+    document.getElementById('itMiamiZone').textContent='Hora local de Miami · '+miaZone+' · '+itDateMiaFmt.format(mia);
+    const message=`Buen dia estimados.
+
+Les comparto actualización DEL vuelo ${itFlight.value.trim()||'________'}:
+
+ETA arriving at SAL: ${etaSalText}
+ETD departing from SAL: ${etdSalText}
+ETA at MIA: ${miaText} hrs., local time in MIA
+
+Quedamos atentos,`;
+    document.getElementById('itineraryMessage').value=message;
+}
+function updateZuluConverter(){
+    const instant=buildItineraryInstant(document.getElementById('zuluDate').value,document.getElementById('zuluTime').value,'zulu');
+    if(!instant)return;
+    document.getElementById('zuluLocalTime').textContent=itFormatter12.format(instant).replace(' AM',' a.m.').replace(' PM',' p.m.');
+    document.getElementById('zuluLocalDate').textContent='Fecha local: '+itDateSalFmt.format(instant)+' · UTC−6';
+}
+const todaySal=isoTodayInZone('America/El_Salvador');
+itDate.value=todaySal;
+document.getElementById('zuluDate').value=isoTodayInZone('UTC');
+[itDate,itFlight,itTimeMode,itEtaInput].forEach(el=>el.addEventListener('input',updateItinerary));
+[itDate,itTimeMode,itEtaInput].forEach(el=>el.addEventListener('change',updateItinerary));
+['zuluDate','zuluTime'].forEach(id=>{document.getElementById(id).addEventListener('input',updateZuluConverter);document.getElementById(id).addEventListener('change',updateZuluConverter);});
+document.getElementById('itCopyMessage').addEventListener('click',async()=>{
+    const message=document.getElementById('itineraryMessage').value;const feedback=document.getElementById('itFeedback');
+    try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(message);}else{const ta=document.createElement('textarea');ta.value=message;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw new Error('copy failed');ta.remove();}feedback.textContent='✓ Mensaje copiado correctamente.';}catch(e){feedback.textContent='No se pudo copiar. Seleccioná el mensaje manualmente.';}
+});
+document.getElementById('itClear').addEventListener('click',()=>{itFlight.value='';itDate.value=isoTodayInZone('America/El_Salvador');itTimeMode.value='local';itEtaInput.value='';document.getElementById('itFeedback').textContent='';updateItinerary();});
+updateItinerary();updateZuluConverter();
 
 /* CONSULTA EN VIVO DE TARIFAS */
 const tariffData = [{"code":"ANU","name":"St Johns, Antigua","mode":"AIR","min":255.0,"rates":[5.67,2.57,2.21,2.21,2.21,2.21,2.21],"route":""},{"code":"AXA","name":"Anguilla, British WI ***","mode":"AIR","min":330.0,"rates":[7.33,3.35,2.99,2.99,2.99,2.84,2.84],"route":"VIA SMX/+1"},{"code":"BGI","name":"Christ Church, Barbados, WI","mode":"AIR","min":245.0,"rates":[5.44,2.49,2.13,2.13,2.13,2.13,2.13],"route":""},{"code":"BZE","name":"Belize City, Belize","mode":"AIR","min":240.0,"rates":[5.33,2.36,2.0,2.0,2.0,2.0,2.0],"route":""},{"code":"CUR","name":"Curacao, Netherlands Antilles","mode":"AIR","min":265.0,"rates":[5.89,2.69,2.33,2.33,2.33,2.33,2.33],"route":""},{"code":"DOM","name":"Marigot, Dominica ***","mode":"AIR","min":285.0,"rates":[6.33,2.88,2.51,2.51,2.51,2.51,2.51],"route":"VIA SMX/+1"},{"code":"EIS","name":"Tortola, Beef Island ***","mode":"AIR","min":310.0,"rates":[6.89,4.09,3.73,3.73,3.73,3.73,3.73],"route":"VIA SJU"},{"code":"GEO","name":"Georgetown, Guayana","mode":"AIR","min":275.0,"rates":[6.11,2.59,2.23,2.23,2.23,2.23,2.23],"route":""},{"code":"GND","name":"St Georges, Grenada, WI","mode":"AIR","min":295.0,"rates":[6.56,2.96,2.55,2.55,2.55,2.55,2.55],"route":""},{"code":"GUA","name":"Guatemala, GT","mode":"AIR","min":210.0,"rates":[210.0,4.57,1.55,1.55,1.41,1.35,1.35],"route":""},{"code":"KIN","name":"Kingston, Jamaica","mode":"AIR","min":220.0,"rates":[4.89,2.2,1.84,1.84,1.84,1.84,1.84],"route":""},{"code":"MGA","name":"Managua, Nicaragua","mode":"AIR","min":180.0,"rates":[4.0,1.15,1.15,1.15,1.15,1.15,1.15],"route":""},{"code":"MIA","name":"Miami, FL","mode":"AIR","min":125.0,"rates":[2.78,0.97,0.89,0.89,0.89,0.89,0.89],"route":""},{"code":"MNI","name":"Montserrat, BWI ***","mode":"AIR","min":315.0,"rates":[7.0,3.12,2.76,2.76,2.76,2.76,2.76],"route":""},{"code":"NLU","name":"Felipe Angeles, Mexico","mode":"AIR","min":275.0,"rates":[6.11,2.64,2.28,2.28,2.28,2.28,2.28],"route":""},{"code":"PAP","name":"Port Au Prince, Haiti, WI","mode":"AIR","min":435.0,"rates":[9.67,4.35,3.99,3.99,3.99,3.99,3.99],"route":""},{"code":"PBM","name":"Paramaribo, Suriname","mode":"AIR","min":275.0,"rates":[6.11,2.64,2.42,2.42,2.42,2.42,2.42],"route":""},{"code":"POP","name":"Puerto Plata, Dominican Republic ***","mode":"AIR","min":245.0,"rates":[5.44,2.49,2.13,2.13,2.13,2.13,2.13],"route":"VIA STI/ +1"},{"code":"POS","name":"Port of Spain, Trinidad and Tobago","mode":"AIR","min":260.0,"rates":[5.78,2.64,2.28,2.28,2.28,2.28,2.28],"route":""},{"code":"PTY","name":"Panama City, Panama","mode":"AIR","min":180.0,"rates":[4.0,1.25,1.25,1.25,1.25,1.25,1.25],"route":""},{"code":"PUJ","name":"Punta Cana, Dominican Republic","mode":"AIR","min":270.0,"rates":[6.0,2.74,2.52,2.52,2.52,2.52,2.52],"route":"VIA SDQ/+1"},{"code":"SAP","name":"San Pedro Sula, Honduras","mode":"AIR","min":180.0,"rates":[4.0,1.15,1.15,1.15,1.15,1.15,1.15],"route":""},{"code":"SBH","name":"St Barthelemy, FWI ***","mode":"AIR","min":335.0,"rates":[7.44,3.3,2.94,2.94,2.94,2.94,2.94],"route":"VIA SMX/+1"},{"code":"SDQ","name":"Santo Domingo, Dominican Republic","mode":"AIR","min":235.0,"rates":[5.22,2.16,1.8,1.8,1.8,1.8,1.8],"route":""},{"code":"SJU","name":"San Juan, Puerto Rico","mode":"AIR","min":315.0,"rates":[7.0,2.49,2.13,2.13,2.13,2.13,2.13],"route":""},{"code":"SKB","name":"St. Kitts, WI","mode":"AIR","min":275.0,"rates":[6.11,2.75,2.39,2.39,2.39,2.39,2.39],"route":""},{"code":"SLU","name":"Castries, St. Lucia, WI","mode":"AIR","min":290.0,"rates":[6.44,2.89,2.53,2.53,2.53,2.53,2.53],"route":""},{"code":"STI","name":"Santiago, Dominican Republic","mode":"AIR","min":235.0,"rates":[5.22,2.16,1.8,1.8,1.8,1.8,1.8],"route":""},{"code":"STT","name":"St Thomas, VI ***","mode":"AIR","min":425.0,"rates":[9.44,4.09,3.73,3.73,3.73,3.73,3.73],"route":"VIA SJU"},{"code":"STX","name":"St Croix, VI ***","mode":"AIR","min":425.0,"rates":[9.44,4.09,3.73,3.73,3.73,3.73,3.73],"route":"VIA SJU"},{"code":"SVD","name":"St. Vincent, WI","mode":"AIR","min":325.0,"rates":[7.22,2.94,2.58,2.58,2.58,2.58,2.58],"route":""},{"code":"SXM","name":"St. Maarten, Netherlands Antilles","mode":"AIR","min":275.0,"rates":[6.11,2.47,2.11,2.11,2.11,2.11,2.11],"route":""},{"code":"TGU","name":"Tegucigalpa, Honduras ***","mode":"AIR","min":255.0,"rates":[5.67,1.55,1.55,1.55,1.55,1.55,1.55],"route":"VIA XPL/ +1"},{"code":"UVF","name":"Hewannora, St Lucia","mode":"AIR","min":310.0,"rates":[6.89,2.89,2.53,2.53,2.53,2.53,2.53],"route":""},{"code":"XPL","name":"Palmerola, Honduras","mode":"AIR","min":185.0,"rates":[4.11,1.45,1.45,1.45,1.45,1.45,1.45],"route":""},{"code":"ABE","name":"Allentwn-Bethlehem-Eastom","mode":"TRUCK","min":360.0,"rates":[8.0,2.6,2.45,2.45,2.45,2.45,2.45],"route":""},{"code":"ABQ","name":"Albuquerque","mode":"TRUCK","min":285.0,"rates":[6.33,2.35,2.24,2.24,2.24,2.24,2.24],"route":""},{"code":"ALB","name":"Albany New York,","mode":"TRUCK","min":285.0,"rates":[6.33,2.2,2.05,2.05,2.05,2.05,2.05],"route":""},{"code":"ATL","name":"Atlanta, GA","mode":"TRUCK","min":185.0,"rates":[4.11,1.39,1.27,1.27,1.27,1.27,1.27],"route":""},{"code":"AUS","name":"Austin","mode":"TRUCK","min":205.0,"rates":[4.56,1.85,1.71,1.71,1.71,1.71,1.71],"route":""},{"code":"BDL","name":"Hartford-Springfield","mode":"TRUCK","min":255.0,"rates":[5.67,1.9,1.98,1.98,1.98,1.98,1.98],"route":""},{"code":"BHM","name":"Birmingham","mode":"TRUCK","min":205.0,"rates":[4.56,1.68,1.58,1.58,1.58,1.58,1.58],"route":""},{"code":"BNA","name":"Nashville","mode":"TRUCK","min":205.0,"rates":[4.56,1.68,1.58,1.58,1.58,1.58,1.58],"route":""},{"code":"BOS","name":"Boston","mode":"TRUCK","min":265.0,"rates":[5.89,1.95,1.89,1.89,1.89,1.89,1.89],"route":""},{"code":"BRL","name":"Burlington","mode":"TRUCK","min":265.0,"rates":[5.89,2.33,2.28,2.28,2.28,2.28,2.28],"route":""},{"code":"BUF","name":"Buffalo","mode":"TRUCK","min":235.0,"rates":[5.22,2.05,1.89,1.89,1.89,1.89,1.89],"route":""},{"code":"BWI","name":"Baltimore","mode":"TRUCK","min":210.0,"rates":[4.67,1.75,1.63,1.63,1.63,1.63,1.63],"route":""},{"code":"CAE","name":"Columbia","mode":"TRUCK","min":255.0,"rates":[5.67,1.85,1.72,1.72,1.72,1.72,1.72],"route":""},{"code":"CHA","name":"Chattanooga","mode":"TRUCK","min":235.0,"rates":[5.22,2.05,1.79,1.79,1.79,1.79,1.79],"route":""},{"code":"CHS","name":"Charleston S.C.","mode":"TRUCK","min":255.0,"rates":[5.67,1.85,1.72,1.72,1.72,1.72,1.72],"route":""},{"code":"CID","name":"Iowa City","mode":"TRUCK","min":325.0,"rates":[7.22,2.53,2.4,2.4,2.35,2.35,2.35],"route":""},{"code":"CLE","name":"Cleveland Ohio","mode":"TRUCK","min":195.0,"rates":[4.33,1.72,1.63,1.63,1.63,1.63,1.63],"route":""},{"code":"CLT","name":"Charlotte","mode":"TRUCK","min":195.0,"rates":[4.33,1.65,1.48,1.48,1.48,1.48,1.48],"route":""},{"code":"CMH","name":"Columbus Ohio","mode":"TRUCK","min":205.0,"rates":[4.56,1.8,1.68,1.68,1.68,1.68,1.68],"route":""},{"code":"CRP","name":"Corpus","mode":"TRUCK","min":265.0,"rates":[5.89,2.35,2.29,2.29,2.29,2.29,2.29],"route":""},{"code":"CVG","name":"Cincinnati","mode":"TRUCK","min":175.0,"rates":[3.89,1.71,1.57,1.57,1.57,1.57,1.57],"route":""},{"code":"DAY","name":"Dayton","mode":"TRUCK","min":205.0,"rates":[4.56,1.86,1.78,1.78,1.78,1.78,1.78],"route":""},{"code":"DEN","name":"Denver","mode":"TRUCK","min":210.0,"rates":[4.67,1.92,1.79,1.79,1.79,1.79,1.79],"route":""},{"code":"DFW","name":"Dallas Fort Worth, TX","mode":"TRUCK","min":165.0,"rates":[3.67,1.57,1.32,1.32,1.32,1.32,1.32],"route":""},{"code":"DSM","name":"Des Moines Iowa","mode":"TRUCK","min":295.0,"rates":[6.56,2.38,2.25,2.25,2.25,2.25,2.25],"route":""},{"code":"DTW","name":"Detroit","mode":"TRUCK","min":195.0,"rates":[4.33,1.76,1.66,1.66,1.66,1.66,1.66],"route":""},{"code":"ELP","name":"El Paso Tex","mode":"TRUCK","min":235.0,"rates":[5.22,1.95,1.87,1.87,1.87,1.87,1.87],"route":""},{"code":"EVV","name":"Evansville","mode":"TRUCK","min":305.0,"rates":[6.78,2.28,2.19,2.19,2.19,2.19,2.19],"route":""},{"code":"EWR","name":"Newark, NJ","mode":"TRUCK","min":205.0,"rates":[4.56,1.72,1.63,1.63,1.63,1.63,1.63],"route":""},{"code":"FWA","name":"Fort Wayne","mode":"TRUCK","min":210.0,"rates":[4.67,2.12,2.0,2.0,2.0,2.0,1.9],"route":""},{"code":"GRR","name":"Grand Rapids Mich","mode":"TRUCK","min":335.0,"rates":[7.44,2.58,2.55,2.55,2.45,2.45,2.45],"route":""},{"code":"GSO","name":"Greensboro","mode":"TRUCK","min":195.0,"rates":[4.33,1.68,1.54,1.54,1.54,1.54,1.54],"route":""},{"code":"GSP","name":"Greenville-Spartanburg","mode":"TRUCK","min":205.0,"rates":[4.56,1.67,1.57,1.57,1.57,1.57,1.57],"route":""},{"code":"HSV","name":"Huntsville","mode":"TRUCK","min":185.0,"rates":[4.11,1.7,1.49,1.49,1.49,1.49,1.49],"route":""},{"code":"IAD","name":"Washington","mode":"TRUCK","min":195.0,"rates":[4.33,1.57,1.4,1.4,1.4,1.4,1.4],"route":""},{"code":"IAH","name":"Houston, TX","mode":"TRUCK","min":185.0,"rates":[4.11,1.55,1.3,1.3,1.3,1.3,1.3],"route":""},{"code":"IND","name":"Indianapolis","mode":"TRUCK","min":215.0,"rates":[4.78,1.87,1.77,1.77,1.77,1.77,1.77],"route":""},{"code":"JAX","name":"Jacksonville, FL","mode":"TRUCK","min":180.0,"rates":[4.0,1.48,1.27,1.27,1.27,1.27,1.27],"route":""},{"code":"JFK","name":"New York","mode":"TRUCK","min":195.0,"rates":[4.33,1.57,1.47,1.47,1.47,1.47,1.47],"route":""},{"code":"LAS","name":"Las Vegas","mode":"TRUCK","min":285.0,"rates":[6.33,2.05,1.98,1.98,1.98,1.98,1.98],"route":""},{"code":"LAX","name":"Los Angeles, CA","mode":"TRUCK","min":205.0,"rates":[4.56,1.78,1.65,1.65,1.65,1.65,1.65],"route":""},{"code":"LBB","name":"Lubbock","mode":"TRUCK","min":325.0,"rates":[7.22,2.52,2.57,2.57,2.57,2.57,2.57],"route":""},{"code":"LFT","name":"Lafayette","mode":"TRUCK","min":305.0,"rates":[6.78,1.91,1.79,1.79,1.79,1.79,1.79],"route":""},{"code":"LIT","name":"Little Rock Ark","mode":"TRUCK","min":295.0,"rates":[6.56,1.86,1.75,1.75,1.75,1.75,1.75],"route":""},{"code":"LRD","name":"Laredo","mode":"TRUCK","min":305.0,"rates":[6.78,2.22,1.99,1.99,1.99,1.99,1.99],"route":""},{"code":"MBS","name":"Saginaw-Bay","mode":"TRUCK","min":325.0,"rates":[7.22,2.41,2.35,2.35,2.35,2.35,2.35],"route":""},{"code":"MCI","name":"Kansas City","mode":"TRUCK","min":295.0,"rates":[6.56,1.89,1.85,1.85,1.85,1.85,1.85],"route":""},{"code":"MCO","name":"Orlando, FL","mode":"TRUCK","min":195.0,"rates":[4.33,1.35,1.22,1.22,1.22,1.22,1.22],"route":""},{"code":"MDT","name":"Harrisburg-York","mode":"TRUCK","min":305.0,"rates":[6.78,2.26,2.18,2.18,2.18,2.18,2.18],"route":""},{"code":"MEM","name":"Memphis","mode":"TRUCK","min":280.0,"rates":[6.22,1.76,1.55,1.55,1.55,1.55,1.55],"route":""},{"code":"MFE","name":"Mission-Mcallen-Edinburg","mode":"TRUCK","min":315.0,"rates":[7.0,2.37,2.29,2.29,2.29,2.29,2.29],"route":""},{"code":"MGM","name":"Montgomery","mode":"TRUCK","min":280.0,"rates":[6.22,1.76,1.68,1.68,1.68,1.68,1.68],"route":""},{"code":"MKE","name":"Milwaukee Wisc","mode":"TRUCK","min":295.0,"rates":[6.56,1.88,1.73,1.73,1.73,1.73,1.73],"route":""},{"code":"MLI","name":"Moline-Davenport","mode":"TRUCK","min":315.0,"rates":[7.0,2.46,2.38,2.38,2.38,2.38,2.38],"route":""},{"code":"MOB","name":"Mobile","mode":"TRUCK","min":210.0,"rates":[4.67,1.73,1.51,1.51,1.51,1.51,1.51],"route":""},{"code":"MSP","name":"Minneapolis, MN","mode":"TRUCK","min":265.0,"rates":[5.89,1.95,1.82,1.82,1.82,1.82,1.82],"route":""},{"code":"MSY","name":"New Orleans, LA","mode":"TRUCK","min":265.0,"rates":[5.89,1.53,1.4,1.4,1.4,1.4,1.4],"route":""},{"code":"OKC","name":"Oklahoma","mode":"TRUCK","min":275.0,"rates":[6.11,1.72,1.58,1.58,1.58,1.58,1.58],"route":""},{"code":"OMA","name":"Omaha","mode":"TRUCK","min":315.0,"rates":[7.0,2.37,2.24,2.24,2.24,2.24,2.24],"route":""},{"code":"ORD","name":"Chicago, IL","mode":"TRUCK","min":205.0,"rates":[4.56,1.53,1.43,1.43,1.43,1.43,1.43],"route":""},{"code":"ORF","name":"Norfolk-VA","mode":"TRUCK","min":285.0,"rates":[6.33,1.81,1.74,1.74,1.74,1.74,1.74],"route":""},{"code":"PDX","name":"Oregon","mode":"TRUCK","min":265.0,"rates":[5.89,2.51,2.37,2.37,2.37,2.37,2.37],"route":""},{"code":"PHL","name":"Philadelphia","mode":"TRUCK","min":215.0,"rates":[4.78,1.63,1.53,1.53,1.53,1.53,1.53],"route":""},{"code":"PHX","name":"Phoenix, AZ","mode":"TRUCK","min":305.0,"rates":[6.78,2.05,1.94,1.94,1.94,1.94,1.94],"route":""},{"code":"PIT","name":"Pittsurgh","mode":"TRUCK","min":265.0,"rates":[5.89,1.91,1.71,1.71,1.71,1.71,1.71],"route":""},{"code":"PNS","name":"Pensacola","mode":"TRUCK","min":295.0,"rates":[6.56,2.03,1.92,1.92,1.92,1.92,1.92],"route":""},{"code":"RDU","name":"Raleigh Durham, N. Carolina","mode":"TRUCK","min":285.0,"rates":[6.33,1.72,1.57,1.57,1.57,1.57,1.57],"route":""},{"code":"RIC","name":"Richmond","mode":"TRUCK","min":225.0,"rates":[5.0,1.86,1.74,1.74,1.74,1.74,1.74],"route":""},{"code":"RNO","name":"Reno-Tahoe","mode":"TRUCK","min":410.0,"rates":[9.11,4.02,3.95,3.95,3.95,3.95,3.95],"route":""},{"code":"ROC","name":"Rochester","mode":"TRUCK","min":275.0,"rates":[6.11,1.97,1.88,1.88,1.88,1.88,1.88],"route":""},{"code":"SAN","name":"San Diego, CA","mode":"TRUCK","min":325.0,"rates":[7.22,2.47,2.32,2.32,2.32,2.32,2.32],"route":""},{"code":"SAT","name":"San Antonio","mode":"TRUCK","min":295.0,"rates":[6.56,1.99,1.88,1.88,1.88,1.88,1.88],"route":""},{"code":"SAV","name":"Savannah GA","mode":"TRUCK","min":265.0,"rates":[5.89,1.78,1.63,1.63,1.63,1.63,1.63],"route":""},{"code":"SBN","name":"South Bend Ind","mode":"TRUCK","min":315.0,"rates":[7.0,2.32,2.15,2.15,2.15,2.15,2.15],"route":""},{"code":"SDF","name":"Lousville","mode":"TRUCK","min":275.0,"rates":[6.11,1.96,1.68,1.68,1.68,1.68,1.68],"route":""},{"code":"SEA","name":"Seattle, WA","mode":"TRUCK","min":325.0,"rates":[7.22,2.47,2.32,2.32,2.32,2.32,2.32],"route":""},{"code":"SFO","name":"San Francisco, CA","mode":"TRUCK","min":315.0,"rates":[7.0,2.54,2.36,2.36,2.36,2.36,2.36],"route":""},{"code":"SLC","name":"Utah","mode":"TRUCK","min":315.0,"rates":[7.0,2.28,2.02,2.02,2.02,2.02,2.02],"route":""},{"code":"SMF","name":"Sacramento","mode":"TRUCK","min":305.0,"rates":[6.78,2.14,1.98,1.98,1.98,1.98,1.98],"route":""},{"code":"STL","name":"St. Louis","mode":"TRUCK","min":275.0,"rates":[6.11,1.88,1.73,1.73,1.73,1.73,1.73],"route":""},{"code":"SWF","name":"Newburgh","mode":"TRUCK","min":325.0,"rates":[7.22,2.39,2.27,2.27,2.27,2.27,2.27],"route":""},{"code":"SYR","name":"Syracuse","mode":"TRUCK","min":305.0,"rates":[6.78,2.14,1.99,1.99,1.99,1.99,1.99],"route":""},{"code":"TOL","name":"Toledo","mode":"TRUCK","min":275.0,"rates":[6.11,1.93,1.75,1.75,1.75,1.75,1.75],"route":""},{"code":"TPA","name":"Tampa, FL","mode":"TRUCK","min":205.0,"rates":[4.56,1.41,1.22,1.22,1.22,1.22,1.22],"route":""},{"code":"TRI","name":"Bristol-Kngspt-Jhnsn","mode":"TRUCK","min":275.0,"rates":[6.11,1.71,1.64,1.64,1.64,1.64,1.64],"route":""},{"code":"TUL","name":"Tulsa","mode":"TRUCK","min":285.0,"rates":[6.33,1.81,1.79,1.79,1.79,1.79,1.79],"route":""},{"code":"TUS","name":"Tucson","mode":"TRUCK","min":345.0,"rates":[7.67,2.78,2.65,2.65,2.65,2.65,2.65],"route":""},{"code":"TVC","name":"Traverse","mode":"TRUCK","min":335.0,"rates":[7.44,2.56,2.42,2.42,2.42,2.42,2.42],"route":""},{"code":"TYS","name":"Knoxville","mode":"TRUCK","min":275.0,"rates":[6.11,1.81,1.64,1.64,1.64,1.64,1.64],"route":""},{"code":"YUL","name":"Montreal","mode":"TRUCK","min":325.0,"rates":[7.22,2.45,2.11,2.11,2.11,2.11,2.11],"route":""},{"code":"YVR","name":"Vancouver","mode":"TRUCK","min":320.0,"rates":[7.11,2.56,2.39,2.39,2.39,2.39,2.39],"route":""},{"code":"YYZ","name":"Toronto","mode":"TRUCK","min":295.0,"rates":[6.56,2.16,2.1,2.1,2.1,2.1,2.1],"route":""},{"code":"GDL","name":"Guadalajara, Mexico ***","mode":"TRUCK","min":365.0,"rates":[8.11,3.64,3.43,3.28,3.28,3.28,3.28],"route":"VIA NLU/+1"},{"code":"MEX","name":"Mexico City, Mexico ***","mode":"TRUCK","min":365.0,"rates":[8.11,2.89,2.63,2.63,2.63,2.63,2.63],"route":"VIA NLU/+1"},{"code":"MTY","name":"Monterrey, Mexico ***","mode":"TRUCK","min":335.0,"rates":[7.44,3.19,2.83,2.83,2.83,2.83,2.83],"route":"VIA NLU/+1"},{"code":"QRO","name":"Queretaro, Mexico ***","mode":"TRUCK","min":325.0,"rates":[7.22,3.14,2.78,2.78,2.78,2.78,2.78],"route":"VIA NLU/+1"}];
