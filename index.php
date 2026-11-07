@@ -1245,7 +1245,6 @@ button, input, select {
         </div>
         <div class="button-group tariff-copy"><button type="button" class="btn btn-copy" id="copyTariffBtn"><i class="fas fa-copy"></i> Copiar tarifas mostradas</button></div>
         <div class="copy-feedback" id="tariffFeedback"></div>
-        <p class="tariff-note">Tarifario Amerijet SAL · Vigencia indicada en el documento: 30 de agosto de 2026. Tarifas en USD. La consulta muestra los valores del documento; verificá vigencia y cargos adicionales con la aerolínea antes de cotizar.</p>
       </main>
     </section>
 
@@ -1253,7 +1252,7 @@ button, input, select {
 
     <footer class="footer">
 
-        Desarrollado por Cris · +50379979583 © 2026
+        Desarrollado por Cristian · +50379979583 © 2026
 
     </footer>
 
