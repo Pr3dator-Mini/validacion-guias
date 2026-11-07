@@ -1,8 +1,7 @@
 
 <?php
 // ======================================================
-// SISTEMA M6 - VALIDACIÓN DE GUÍAS
-// PREMIUM EDITION 4.0
+// CÁLCULOS M6 - VALIDACIÓN DE GUÍAS
 // SIN SESIONES - SIN HISTORIAL
 // ======================================================
 
@@ -220,7 +219,7 @@ $tariffData = json_decode('[{"code":"ANU","name":"St Johns, Antigua","mode":"AIR
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080e1c">
 
-<title>Sistema M6 | Validación de Guías</title>
+<title>Cálculos M6 | Calculadora y Tarifas</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -836,7 +835,7 @@ button, input, select {
             </div>
 
             <div>
-                <h1>Sistema M6</h1>
+                <h1>Cálculos M6</h1>
                 <p>Validación de Guías</p>
             </div>
 
@@ -849,7 +848,7 @@ button, input, select {
 
     </header>
 
-    <nav class="main-menu" aria-label="Módulos del Sistema M6">
+    <nav class="main-menu" aria-label="Módulos de Cálculos M6">
         <button type="button" class="menu-card active" data-view="validationView">
             <i class="fas fa-calculator"></i><span><strong>Validación de guías</strong><small>Calculadora M6 y cargos originales</small></span>
         </button>
@@ -1108,11 +1107,6 @@ button, input, select {
 
             <div class="button-group">
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-calculator"></i>
-                    Procesar cálculo
-                </button>
-
                 <button
                     type="button"
                     class="btn btn-secondary"
@@ -1259,15 +1253,7 @@ button, input, select {
 
     <footer class="footer">
 
-        SISTEMA M6 © <?= date('Y') ?>
-
-        <br>
-
-        <strong>VALIDACIÓN DE GUÍAS</strong>
-
-        <br>
-
-        PREMIUM EDITION · USD
+        Desarrollado por Cris · +50379979583 © 2026
 
     </footer>
 
@@ -1276,10 +1262,15 @@ button, input, select {
 <script>
 
 /* ======================================================
-   SISTEMA M6 - CÁLCULOS AUTOMÁTICOS
+   CÁLCULOS M6 - CÁLCULOS AUTOMÁTICOS
 ====================================================== */
 
 const form = document.getElementById('calcForm');
+
+// La calculadora trabaja completamente en vivo, sin procesar ni recargar la página.
+form.addEventListener('submit', function(event) {
+    event.preventDefault();
+});
 
 /* NAVEGACIÓN ENTRE MÓDULOS */
 document.querySelectorAll('[data-view]').forEach(button => {
@@ -1516,8 +1507,7 @@ document.getElementById('copyBtn').addEventListener('click', async function() {
 
     const lines = [
         '================================',
-        '          SISTEMA M6',
-        '       VALIDACIÓN DE GUÍAS',
+        '          CÁLCULOS M6',
         '================================',
         '',
         'Peso volumétrico: ' + result.peso.toFixed(2) + ' kg',
@@ -1541,7 +1531,7 @@ document.getElementById('copyBtn').addEventListener('click', async function() {
         'TOTAL: ' + formatter.format(result.total),
         '',
         '================================',
-        '          SISTEMA M6',
+        '          CÁLCULOS M6',
         '================================'
     ];
 
