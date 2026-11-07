@@ -1501,7 +1501,7 @@ function updateItinerary(){
     document.getElementById('itMiamiZone').textContent='Hora local de Miami · '+miaZone+' · '+itDateMiaFmt.format(mia);
     const message=`Buen dia estimados.
 
-Les comparto actualización DEL vuelo ${itFlight.value.trim()||'________'}:
+Les comparto actualización vuelo ${itFlight.value.trim()||'________'}:
 
 ETA arriving at SAL: ${etaSalText}
 ETD departing from SAL: ${etdSalText}
