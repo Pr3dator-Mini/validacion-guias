@@ -1,32 +1,34 @@
 
 <?php
-declare(strict_types=1);
 session_start();
 
 /*
 |--------------------------------------------------------------------------
 | SISTEMA M6 - VALIDACIÓN DE GUÍAS
-| Versión Premium 2.0
+| PREMIUM EDITION 2.1
 |--------------------------------------------------------------------------
-| - Cálculos automáticos en JavaScript.
-| - Validación y cálculo definitivo en PHP.
-| - Historial de las últimas 20 cotizaciones por sesión.
-| - Copiar resumen.
-| - Moneda USD.
+| Cálculos automáticos
+| Historial por sesión
+| Copiar resumen
+| Validación PHP
+| Moneda USD
 |--------------------------------------------------------------------------
 */
 
-// ---------------------------------------------------------
+// =========================================================
 // CONFIGURACIÓN
-// ---------------------------------------------------------
+// =========================================================
 
 const IVA_RATE = 0.13;
 const FUEL_RATE = 0.44;
 const SECURITY_RATE = 0.10;
 const PBA_RATE = 0.12;
 const COLLECT_RATE = 0.05;
-
 const MAX_HISTORY = 20;
+
+// =========================================================
+// SESIÓN
+// =========================================================
 
 if (!isset($_SESSION['m6_history'])) {
     $_SESSION['m6_history'] = [];
@@ -36,11 +38,11 @@ if (empty($_SESSION['m6_token'])) {
     $_SESSION['m6_token'] = bin2hex(random_bytes(32));
 }
 
-// ---------------------------------------------------------
+// =========================================================
 // FUNCIONES
-// ---------------------------------------------------------
+// =========================================================
 
-function escape($value): string {
+function escape($value) {
     return htmlspecialchars(
         (string)$value,
         ENT_QUOTES,
@@ -48,17 +50,20 @@ function escape($value): string {
     );
 }
 
-function money(float $value): string {
-    return '$' . number_format($value, 2, '.', ',');
+function money($value) {
+    return '$' . number_format((float)$value, 2, '.', ',');
 }
 
-function getNumber(array $source, string $key, float $default = 0): float {
+function getNumber($source, $key, $default = 0) {
 
     if (!isset($source[$key]) || $source[$key] === '') {
         return $default;
     }
 
-    $value = filter_var($source[$key], FILTER_VALIDATE_FLOAT);
+    $value = filter_var(
+        $source[$key],
+        FILTER_VALIDATE_FLOAT
+    );
 
     if ($value === false || !is_finite((float)$value)) {
         throw new InvalidArgumentException(
@@ -77,7 +82,11 @@ function getNumber(array $source, string $key, float $default = 0): float {
     return $value;
 }
 
-function calculate(array $data): array {
+// =========================================================
+// MOTOR DE CÁLCULO
+// =========================================================
+
+function calculate($data) {
 
     $peso = $data['peso_volumetrico'];
     $tarifaMin = $data['tarifa_min'];
@@ -93,21 +102,21 @@ function calculate(array $data): array {
 
     // FUEL
     $fuel = $peso > 0
-        ? max(15, FUEL_RATE * $peso)
+        ? max(15, 0.44 * $peso)
         : 0;
 
     // SECURITY
     $security = $peso > 0
-        ? max(10, SECURITY_RATE * $peso)
+        ? max(10, 0.10 * $peso)
         : 0;
 
     // PBA
     $pba = $cargosAgente > 0
-        ? max(35, $cargosAgente * PBA_RATE)
+        ? max(35, $cargosAgente * 0.12)
         : 0;
 
     // COLLECT FEE
-    $collectFee = max(25, $flete * COLLECT_RATE);
+    $collectFee = max(25, $flete * 0.05);
 
     // PEAK SEASON
     $peakSeasonCharge = 0;
@@ -151,7 +160,7 @@ function calculate(array $data): array {
 
     // IVA
     $iva = $data['iva']
-        ? ($subtotal * IVA_RATE)
+        ? ($subtotal * 0.13)
         : 0;
 
     // TOTAL
@@ -173,9 +182,9 @@ function calculate(array $data): array {
     ];
 }
 
-// ---------------------------------------------------------
+// =========================================================
 // VALORES INICIALES
-// ---------------------------------------------------------
+// =========================================================
 
 $defaults = [
     'peso_volumetrico' => 0,
@@ -193,22 +202,32 @@ $defaults = [
 $data = $defaults;
 $results = null;
 $errors = [];
+
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 
-// ---------------------------------------------------------
-// LIMPIAR HISTORIAL
-// ---------------------------------------------------------
+// =========================================================
+// BORRAR HISTORIAL
+// =========================================================
 
 if (isset($_GET['clear_history'])) {
+
+    if (
+        !isset($_GET['token']) ||
+        !hash_equals($_SESSION['m6_token'], (string)$_GET['token'])
+    ) {
+        http_response_code(403);
+        exit('Solicitud no autorizada.');
+    }
+
     $_SESSION['m6_history'] = [];
 
     header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
     exit;
 }
 
-// ---------------------------------------------------------
-// PROCESAR FORMULARIO
-// ---------------------------------------------------------
+// =========================================================
+// PROCESAMIENTO
+// =========================================================
 
 if ($isPost) {
 
@@ -226,17 +245,23 @@ if ($isPost) {
             );
         }
 
-        $data['peso_volumetrico'] = getNumber($_POST, 'peso_volumetrico');
-        $data['tarifa_min'] = getNumber($_POST, 'tarifa_min');
-        $data['tarifa_aplicar'] = getNumber($_POST, 'tarifa_aplicar');
-        $data['cargos_agente'] = getNumber($_POST, 'cargos_agente');
-        $data['other'] = getNumber($_POST, 'other');
+        $data['peso_volumetrico'] =
+            getNumber($_POST, 'peso_volumetrico');
 
-        $data['fuel_escalation_rate'] = getNumber(
-            $_POST,
-            'fuel_escalation_rate',
-            0.20
-        );
+        $data['tarifa_min'] =
+            getNumber($_POST, 'tarifa_min');
+
+        $data['tarifa_aplicar'] =
+            getNumber($_POST, 'tarifa_aplicar');
+
+        $data['cargos_agente'] =
+            getNumber($_POST, 'cargos_agente');
+
+        $data['other'] =
+            getNumber($_POST, 'other');
+
+        $data['fuel_escalation_rate'] =
+            getNumber($_POST, 'fuel_escalation_rate', 0.20);
 
         if ($data['fuel_escalation_rate'] > 1) {
             throw new InvalidArgumentException(
@@ -244,7 +269,8 @@ if ($isPost) {
             );
         }
 
-        $data['peak_season'] = $_POST['peak_season'] ?? '';
+        $data['peak_season'] =
+            $_POST['peak_season'] ?? '';
 
         if (!in_array(
             $data['peak_season'],
@@ -260,10 +286,17 @@ if ($isPost) {
         $data['iva'] = isset($_POST['iva']);
         $data['fuel_escalation'] = isset($_POST['fuel_escalation']);
 
-        // CÁLCULO FINAL EN PHP
+        // VALIDACIÓN DEL PESO
+        if ($data['peso_volumetrico'] <= 0) {
+            throw new InvalidArgumentException(
+                'El peso volumétrico debe ser mayor que cero.'
+            );
+        }
+
+        // CÁLCULO DEFINITIVO
         $results = calculate($data);
 
-        // GUARDAR HISTORIAL
+        // HISTORIAL
         $record = [
             'id' => bin2hex(random_bytes(4)),
             'date' => date('d/m/Y H:i:s'),
@@ -271,7 +304,10 @@ if ($isPost) {
             'results' => $results
         ];
 
-        array_unshift($_SESSION['m6_history'], $record);
+        array_unshift(
+            $_SESSION['m6_history'],
+            $record
+        );
 
         $_SESSION['m6_history'] = array_slice(
             $_SESSION['m6_history'],
@@ -291,23 +327,6 @@ if ($isPost) {
 
 $history = $_SESSION['m6_history'];
 
-// ---------------------------------------------------------
-// FORMATO PARA JAVASCRIPT
-// ---------------------------------------------------------
-
-$jsData = [
-    'peso_volumetrico' => (float)$data['peso_volumetrico'],
-    'tarifa_min' => (float)$data['tarifa_min'],
-    'tarifa_aplicar' => (float)$data['tarifa_aplicar'],
-    'cargos_agente' => (float)$data['cargos_agente'],
-    'other' => (float)$data['other'],
-    'fuel_escalation_rate' => (float)$data['fuel_escalation_rate'],
-    'peak_season' => $data['peak_season'],
-    'collect_fee' => $data['collect_fee'],
-    'iva' => $data['iva'],
-    'fuel_escalation' => $data['fuel_escalation']
-];
-
 ?>
 
 <!DOCTYPE html>
@@ -317,7 +336,6 @@ $jsData = [
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <meta name="theme-color" content="#080e1c">
 
 <title>Sistema M6 | Validación de Guías</title>
@@ -353,9 +371,7 @@ $jsData = [
     --radius: 18px;
 }
 
-/* =====================================================
-   RESET
-===================================================== */
+/* RESET */
 
 * {
     margin: 0;
@@ -365,6 +381,7 @@ $jsData = [
 
 body {
     font-family: 'Inter', sans-serif;
+
     background:
         radial-gradient(ellipse at top left, #12305b 0%, transparent 35%),
         radial-gradient(ellipse at bottom right, #102747 0%, transparent 35%),
@@ -379,18 +396,12 @@ button, input, select {
     font-family: inherit;
 }
 
-/* =====================================================
-   CONTENEDOR
-===================================================== */
-
 .container {
     max-width: 1050px;
     margin: auto;
 }
 
-/* =====================================================
-   HEADER
-===================================================== */
+/* HEADER */
 
 .header {
     display: flex;
@@ -409,15 +420,12 @@ button, input, select {
 .brand-icon {
     width: 58px;
     height: 58px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border-radius: 17px;
 
     background: linear-gradient(135deg, #0ea5e9, #2563eb);
-
     box-shadow: 0 8px 30px rgba(14,165,233,.25);
 
     font-size: 25px;
@@ -441,13 +449,10 @@ button, input, select {
     display: flex;
     align-items: center;
     gap: 8px;
-
     background: rgba(34,197,94,.09);
     border: 1px solid rgba(34,197,94,.2);
-
     padding: 10px 14px;
     border-radius: 30px;
-
     color: #4ade80;
     font-size: 12px;
     font-weight: 600;
@@ -461,19 +466,14 @@ button, input, select {
     box-shadow: 0 0 10px #22c55e;
 }
 
-/* =====================================================
-   PANEL
-===================================================== */
+/* PANEL */
 
 .panel {
     background: rgba(16,26,46,.92);
     border: 1px solid var(--border);
     border-radius: 24px;
-
     padding: 30px;
-
     box-shadow: 0 20px 60px rgba(0,0,0,.25);
-
     backdrop-filter: blur(15px);
 }
 
@@ -500,9 +500,7 @@ button, input, select {
     margin-top: 5px;
 }
 
-/* =====================================================
-   FORMULARIO
-===================================================== */
+/* FORMULARIO */
 
 .form-grid {
     display: grid;
@@ -514,10 +512,6 @@ button, input, select {
     display: flex;
     flex-direction: column;
     gap: 9px;
-}
-
-.form-group.full {
-    grid-column: 1 / -1;
 }
 
 label {
@@ -543,17 +537,12 @@ label {
 input, select {
     width: 100%;
     height: 49px;
-
     background: #0b1426;
-
     border: 1px solid var(--border);
     border-radius: 12px;
-
     color: white;
     font-size: 14px;
-
     padding: 0 15px 0 43px;
-
     outline: none;
     transition: .25s;
 }
@@ -572,19 +561,7 @@ input::placeholder {
     color: #64748b;
 }
 
-.input-wrapper small {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    font-size: 11px;
-    pointer-events: none;
-}
-
-/* =====================================================
-   OPCIONES
-===================================================== */
+/* OPCIONES */
 
 .options-title {
     margin: 30px 0 15px;
@@ -604,11 +581,9 @@ input::placeholder {
     border: 1px solid var(--border);
     border-radius: 13px;
     padding: 15px;
-
     display: flex;
     align-items: center;
     gap: 11px;
-
     cursor: pointer;
     transition: .2s;
 }
@@ -630,9 +605,7 @@ input::placeholder {
     font-weight: 600;
 }
 
-/* =====================================================
-   BOTONES
-===================================================== */
+/* BOTONES */
 
 .button-group {
     display: flex;
@@ -644,17 +617,13 @@ input::placeholder {
     min-height: 48px;
     border: none;
     border-radius: 12px;
-
     padding: 0 22px;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 9px;
-
     font-size: 13px;
     font-weight: 700;
-
     cursor: pointer;
     transition: .25s;
     text-decoration: none;
@@ -691,9 +660,7 @@ input::placeholder {
     background: rgba(56,189,248,.18);
 }
 
-/* =====================================================
-   RESULTADOS
-===================================================== */
+/* RESULTADOS */
 
 .result-section {
     margin-top: 28px;
@@ -736,11 +703,8 @@ input::placeholder {
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-
     padding: 13px 0;
-
     border-bottom: 1px solid rgba(255,255,255,.06);
-
     font-size: 13px;
 }
 
@@ -766,7 +730,6 @@ input::placeholder {
 .total-box {
     margin-top: 20px;
     padding: 23px;
-
     border-radius: 16px;
 
     background: linear-gradient(
@@ -776,7 +739,6 @@ input::placeholder {
     );
 
     border: 1px solid rgba(34,197,94,.2);
-
     text-align: center;
 }
 
@@ -803,9 +765,7 @@ input::placeholder {
     margin-top: 18px;
 }
 
-/* =====================================================
-   HISTORIAL
-===================================================== */
+/* HISTORIAL */
 
 .history-section {
     margin-top: 28px;
@@ -850,7 +810,6 @@ input::placeholder {
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-
     background: #0b1426;
     border: 1px solid var(--border);
     border-radius: 13px;
@@ -880,9 +839,7 @@ input::placeholder {
     margin-bottom: 12px;
 }
 
-/* =====================================================
-   ALERTAS Y FOOTER
-===================================================== */
+/* ALERTAS */
 
 .alert {
     padding: 14px 16px;
@@ -897,6 +854,8 @@ input::placeholder {
     border: 1px solid rgba(239,68,68,.2);
 }
 
+/* FOOTER */
+
 .footer {
     text-align: center;
     margin-top: 28px;
@@ -909,9 +868,7 @@ input::placeholder {
     color: #94a3b8;
 }
 
-/* =====================================================
-   RESPONSIVE
-===================================================== */
+/* RESPONSIVE */
 
 @media(max-width:700px) {
 
@@ -946,10 +903,6 @@ input::placeholder {
         gap: 17px;
     }
 
-    .form-group.full {
-        grid-column: auto;
-    }
-
     .options-grid {
         grid-template-columns: 1fr;
     }
@@ -965,7 +918,6 @@ input::placeholder {
     .total-box h3 {
         font-size: 30px;
     }
-
 }
 
 </style>
@@ -1195,8 +1147,6 @@ input::placeholder {
                             step="0.01"
                             value="<?= escape($data['fuel_escalation_rate']) ?>"
                         >
-
-                        <small>0.20 = 20%</small>
                     </div>
 
                 </div>
@@ -1428,8 +1378,7 @@ input::placeholder {
 
                                 <p>
                                     <?= escape($item['date']) ?>
-                                    ·
-                                    Peso:
+                                    · Peso:
                                     <?= number_format(
                                         $item['data']['peso_volumetrico'],
                                         2
@@ -1439,7 +1388,7 @@ input::placeholder {
                             </div>
 
                             <strong>
-                                <?= money((float)$item['results']['total']) ?>
+                                <?= money($item['results']['total']) ?>
                             </strong>
 
                         </div>
@@ -1455,7 +1404,7 @@ input::placeholder {
                 <div style="margin-top:18px;">
 
                     <a
-                        href="?clear_history=1"
+                        href="?clear_history=1&amp;token=<?= escape($_SESSION['m6_token']) ?>"
                         class="btn btn-secondary"
                         onclick="return confirm('¿Seguro que querés borrar todo el historial?')"
                     >
@@ -1489,19 +1438,10 @@ input::placeholder {
 <script>
 
 /* =====================================================
-   SISTEMA M6 - MOTOR DE CÁLCULO AUTOMÁTICO
+   SISTEMA M6 - CÁLCULOS AUTOMÁTICOS
 ===================================================== */
 
 const form = document.getElementById('calcForm');
-
-const numberFields = [
-    'peso_volumetrico',
-    'tarifa_min',
-    'tarifa_aplicar',
-    'cargos_agente',
-    'other',
-    'fuel_escalation_rate'
-];
 
 const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -1644,18 +1584,14 @@ function calculateLive() {
     };
 }
 
-/* =====================================================
-   ACTUALIZACIÓN EN TIEMPO REAL
-===================================================== */
+/* ACTUALIZACIÓN EN TIEMPO REAL */
 
 form.addEventListener('input', calculateLive);
 form.addEventListener('change', calculateLive);
 
 calculateLive();
 
-/* =====================================================
-   LIMPIAR FORMULARIO
-===================================================== */
+/* LIMPIAR */
 
 document.getElementById('resetBtn').addEventListener('click', () => {
 
@@ -1667,9 +1603,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 
 });
 
-/* =====================================================
-   COPIAR RESUMEN
-===================================================== */
+/* COPIAR RESUMEN */
 
 document.getElementById('copyBtn').addEventListener('click', async () => {
 
