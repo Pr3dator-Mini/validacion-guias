@@ -1,32 +1,10 @@
 
 <?php
-// SISTEMA M6 - PREMIUM 3.0
-// IMPORTANTE: guardar este archivo como UTF-8 SIN BOM.
-
-ob_start();
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // ======================================================
-// CONFIGURACIÓN
+// SISTEMA M6 - VALIDACIÓN DE GUÍAS
+// PREMIUM EDITION 4.0
+// SIN SESIONES - SIN HISTORIAL
 // ======================================================
-
-const MAX_HISTORY = 20;
-const IVA_RATE = 0.13;
-const FUEL_RATE = 0.44;
-const SECURITY_RATE = 0.10;
-const PBA_RATE = 0.12;
-const COLLECT_RATE = 0.05;
-
-if (!isset($_SESSION['m6_history']) || !is_array($_SESSION['m6_history'])) {
-    $_SESSION['m6_history'] = [];
-}
-
-if (empty($_SESSION['m6_token'])) {
-    $_SESSION['m6_token'] = bin2hex(random_bytes(32));
-}
 
 // ======================================================
 // FUNCIONES
@@ -36,17 +14,13 @@ function e($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
-function usd($value) {
-    return '$' . number_format((float)$value, 2, '.', ',');
-}
+function getNumber($key, $default = 0) {
 
-function getNumber($source, $key, $default = 0) {
-
-    if (!isset($source[$key]) || $source[$key] === '') {
+    if (!isset($_POST[$key]) || $_POST[$key] === '') {
         return (float)$default;
     }
 
-    $value = filter_var($source[$key], FILTER_VALIDATE_FLOAT);
+    $value = filter_var($_POST[$key], FILTER_VALIDATE_FLOAT);
 
     if ($value === false || !is_finite((float)$value)) {
         throw new InvalidArgumentException(
@@ -160,7 +134,7 @@ function calculateM6($data) {
 // VALORES INICIALES
 // ======================================================
 
-$defaults = [
+$data = [
     'peso_volumetrico' => 0,
     'tarifa_min' => 0,
     'tarifa_aplicar' => 0,
@@ -173,57 +147,26 @@ $defaults = [
     'fuel_escalation' => false
 ];
 
-$data = $defaults;
 $results = null;
 $errors = [];
 
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 
 // ======================================================
-// BORRAR HISTORIAL
-// ======================================================
-
-if (isset($_GET['clear_history'])) {
-
-    $token = isset($_GET['token']) ? (string)$_GET['token'] : '';
-
-    if (!hash_equals($_SESSION['m6_token'], $token)) {
-        http_response_code(403);
-        exit('Solicitud no autorizada.');
-    }
-
-    $_SESSION['m6_history'] = [];
-
-    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
-    exit;
-}
-
-// ======================================================
-// PROCESAR COTIZACIÓN
+// PROCESAR
 // ======================================================
 
 if ($isPost) {
 
     try {
 
-        $token = isset($_POST['csrf_token'])
-            ? (string)$_POST['csrf_token']
-            : '';
-
-        if (!hash_equals($_SESSION['m6_token'], $token)) {
-            throw new InvalidArgumentException(
-                'La sesión expiró. Recargá la página.'
-            );
-        }
-
-        $data['peso_volumetrico'] = getNumber($_POST, 'peso_volumetrico');
-        $data['tarifa_min'] = getNumber($_POST, 'tarifa_min');
-        $data['tarifa_aplicar'] = getNumber($_POST, 'tarifa_aplicar');
-        $data['cargos_agente'] = getNumber($_POST, 'cargos_agente');
-        $data['other'] = getNumber($_POST, 'other');
+        $data['peso_volumetrico'] = getNumber('peso_volumetrico');
+        $data['tarifa_min'] = getNumber('tarifa_min');
+        $data['tarifa_aplicar'] = getNumber('tarifa_aplicar');
+        $data['cargos_agente'] = getNumber('cargos_agente');
+        $data['other'] = getNumber('other');
 
         $data['fuel_escalation_rate'] = getNumber(
-            $_POST,
             'fuel_escalation_rate',
             0.20
         );
@@ -234,12 +177,12 @@ if ($isPost) {
             );
         }
 
-        $data['peak_season'] = isset($_POST['peak_season'])
-            ? (string)$_POST['peak_season']
-            : '';
+        $data['peak_season'] = $_POST['peak_season'] ?? '';
 
         if (!in_array($data['peak_season'], ['', 'okra', 'general'], true)) {
-            throw new InvalidArgumentException('Peak Season inválido.');
+            throw new InvalidArgumentException(
+                'La modalidad Peak Season no es válida.'
+            );
         }
 
         $data['collect_fee'] = isset($_POST['collect_fee']);
@@ -252,24 +195,7 @@ if ($isPost) {
             );
         }
 
-        // CÁLCULO DEFINITIVO EN PHP
         $results = calculateM6($data);
-
-        // GUARDAR HISTORIAL
-        $record = [
-            'id' => bin2hex(random_bytes(4)),
-            'date' => date('d/m/Y H:i:s'),
-            'data' => $data,
-            'results' => $results
-        ];
-
-        array_unshift($_SESSION['m6_history'], $record);
-
-        $_SESSION['m6_history'] = array_slice(
-            $_SESSION['m6_history'],
-            0,
-            MAX_HISTORY
-        );
 
     } catch (InvalidArgumentException $exception) {
 
@@ -280,8 +206,6 @@ if ($isPost) {
         $errors[] = 'Ocurrió un error al procesar la cotización.';
     }
 }
-
-$history = $_SESSION['m6_history'];
 
 ?>
 
@@ -306,7 +230,7 @@ $history = $_SESSION['m6_history'];
 <style>
 
 /* ======================================================
-   RESET Y CONFIGURACIÓN GLOBAL
+   ESTILOS GENERALES
 ====================================================== */
 
 * {
@@ -322,7 +246,6 @@ html {
 }
 
 body {
-    display: block;
     width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
@@ -342,24 +265,13 @@ button, input, select {
     font-family: inherit;
 }
 
-button {
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* ======================================================
-   CONTENEDOR CENTRADO
-====================================================== */
-
 .container {
-    display: block;
     width: 100%;
     max-width: 960px;
     margin: 0 auto;
 }
 
-/* ======================================================
-   HEADER
-====================================================== */
+/* HEADER */
 
 .header {
     display: flex;
@@ -373,7 +285,6 @@ button {
     display: flex;
     align-items: center;
     gap: 15px;
-    min-width: 0;
 }
 
 .brand-icon {
@@ -388,7 +299,6 @@ button {
     border-radius: 17px;
 
     background: linear-gradient(135deg, #0ea5e9, #2563eb);
-
     box-shadow: 0 8px 30px rgba(14,165,233,.25);
 
     font-size: 25px;
@@ -422,7 +332,6 @@ button {
     color: #4ade80;
     font-size: 11px;
     font-weight: 700;
-    white-space: nowrap;
 }
 
 .status-dot {
@@ -433,21 +342,14 @@ button {
     box-shadow: 0 0 10px #22c55e;
 }
 
-/* ======================================================
-   PANELES
-====================================================== */
+/* PANEL */
 
-.panel,
-.history-card {
+.panel {
     width: 100%;
-    min-width: 0;
-
     background: rgba(16,26,46,.94);
     border: 1px solid rgba(148,163,184,.13);
     border-radius: 22px;
-
     padding: 28px;
-
     box-shadow: 0 20px 55px rgba(0,0,0,.22);
 }
 
@@ -474,9 +376,7 @@ button {
     margin-top: 5px;
 }
 
-/* ======================================================
-   FORMULARIO
-====================================================== */
+/* FORMULARIO */
 
 .form-grid {
     display: grid;
@@ -500,7 +400,6 @@ button {
 .input-wrapper {
     position: relative;
     width: 100%;
-    min-width: 0;
 }
 
 .input-wrapper > i {
@@ -508,10 +407,8 @@ button {
     top: 50%;
     left: 15px;
     transform: translateY(-50%);
-
     color: #64748b;
     font-size: 14px;
-
     pointer-events: none;
 }
 
@@ -527,7 +424,6 @@ button {
     color: #f8fafc;
 
     font-size: 13px;
-
     outline: none;
     transition: .25s;
 }
@@ -551,13 +447,7 @@ button {
     color: #64748b;
 }
 
-.input-wrapper select option {
-    background: #0b1426;
-}
-
-/* ======================================================
-   OPCIONES
-====================================================== */
+/* OPCIONES */
 
 .options-title {
     margin: 28px 0 15px;
@@ -581,8 +471,6 @@ button {
     display: flex;
     align-items: center;
     gap: 10px;
-
-    min-width: 0;
     padding: 15px;
 
     background: #0b1426;
@@ -595,7 +483,6 @@ button {
 
 .option-card:hover {
     border-color: rgba(56,189,248,.5);
-    background: #101e34;
 }
 
 .option-card input {
@@ -612,9 +499,7 @@ button {
     color: #cbd5e1;
 }
 
-/* ======================================================
-   BOTONES
-====================================================== */
+/* BOTONES */
 
 .button-group {
     display: flex;
@@ -637,9 +522,7 @@ button {
     font-size: 12px;
     font-weight: 700;
 
-    text-decoration: none;
     cursor: pointer;
-
     transition: .2s;
 }
 
@@ -674,9 +557,7 @@ button {
     background: rgba(56,189,248,.18);
 }
 
-/* ======================================================
-   RESULTADOS
-====================================================== */
+/* RESULTADOS */
 
 .result-section {
     width: 100%;
@@ -714,7 +595,6 @@ button {
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1px;
-    white-space: nowrap;
 }
 
 .result-row {
@@ -724,7 +604,6 @@ button {
     gap: 15px;
 
     padding: 12px 0;
-
     border-bottom: 1px solid rgba(255,255,255,.055);
 
     font-size: 12px;
@@ -785,12 +664,6 @@ button {
     font-variant-numeric: tabular-nums;
 }
 
-.result-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
-}
-
 .copy-feedback {
     min-height: 16px;
     margin-top: 10px;
@@ -799,94 +672,7 @@ button {
     text-align: center;
 }
 
-/* ======================================================
-   HISTORIAL
-====================================================== */
-
-.history-section {
-    margin-top: 25px;
-}
-
-.history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.history-header h2 {
-    font-size: 16px;
-}
-
-.history-header h2 i {
-    color: #38bdf8;
-    margin-right: 7px;
-}
-
-.history-count {
-    padding: 6px 11px;
-    border-radius: 20px;
-    background: rgba(56,189,248,.1);
-    color: #38bdf8;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-
-    padding: 15px;
-
-    background: #0b1426;
-    border: 1px solid rgba(148,163,184,.12);
-    border-radius: 12px;
-}
-
-.history-item b {
-    font-size: 12px;
-}
-
-.history-item p {
-    color: #94a3b8;
-    font-size: 10px;
-    margin-top: 6px;
-}
-
-.history-item strong {
-    color: #4ade80;
-    font-size: 14px;
-    white-space: nowrap;
-}
-
-.empty-history {
-    padding: 30px;
-    text-align: center;
-    color: #64748b;
-}
-
-.empty-history i {
-    display: block;
-    font-size: 30px;
-    margin-bottom: 12px;
-}
-
-.history-footer {
-    margin-top: 18px;
-}
-
-/* ======================================================
-   ALERTAS
-====================================================== */
+/* ALERTAS */
 
 .alert {
     padding: 13px 15px;
@@ -901,9 +687,7 @@ button {
     border: 1px solid rgba(239,68,68,.2);
 }
 
-/* ======================================================
-   FOOTER
-====================================================== */
+/* FOOTER */
 
 .footer {
     margin-top: 28px;
@@ -919,21 +703,13 @@ button {
     color: #94a3b8;
 }
 
-/* ======================================================
-   TABLET
-====================================================== */
+/* RESPONSIVE */
 
 @media (max-width: 900px) {
-
     .container {
         max-width: 760px;
     }
-
 }
-
-/* ======================================================
-   MÓVIL
-====================================================== */
 
 @media (max-width: 600px) {
 
@@ -942,7 +718,6 @@ button {
     }
 
     .container {
-        width: 100%;
         max-width: 100%;
     }
 
@@ -972,7 +747,6 @@ button {
     }
 
     .panel,
-    .history-card,
     .result-card {
         padding: 18px;
         border-radius: 17px;
@@ -987,8 +761,7 @@ button {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .button-group,
-    .result-actions {
+    .button-group {
         flex-direction: column;
     }
 
@@ -1002,14 +775,6 @@ button {
 
     .total-box h3 {
         font-size: 30px;
-    }
-
-    .history-item {
-        padding: 12px;
-    }
-
-    .history-item strong {
-        font-size: 12px;
     }
 }
 
@@ -1026,7 +791,6 @@ button {
     .result-row strong {
         font-size: 11px;
     }
-
 }
 
 </style>
@@ -1061,7 +825,7 @@ button {
 
     </header>
 
-    <!-- FORMULARIO -->
+    <!-- CALCULADORA -->
 
     <main class="panel">
 
@@ -1087,12 +851,6 @@ button {
 
         <form method="POST" id="calcForm">
 
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e($_SESSION['m6_token']) ?>"
-            >
-
             <div class="form-grid">
 
                 <div class="form-group">
@@ -1112,7 +870,7 @@ button {
                             step="0.01"
                             placeholder="Ej. 150"
                             required
-                            value="<?= e($data['peso_volumetrico']) ?>"
+                            value="<?= $isPost ? e($data['peso_volumetrico']) : '' ?>"
                         >
                     </div>
 
@@ -1134,7 +892,7 @@ button {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= e($data['tarifa_min']) ?>"
+                            value="<?= $isPost ? e($data['tarifa_min']) : '' ?>"
                         >
                     </div>
 
@@ -1156,7 +914,7 @@ button {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= e($data['tarifa_aplicar']) ?>"
+                            value="<?= $isPost ? e($data['tarifa_aplicar']) : '' ?>"
                         >
                     </div>
 
@@ -1178,7 +936,7 @@ button {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= e($data['cargos_agente']) ?>"
+                            value="<?= $isPost ? e($data['cargos_agente']) : '' ?>"
                         >
                     </div>
 
@@ -1200,7 +958,7 @@ button {
                             min="0"
                             step="0.01"
                             placeholder="0.00"
-                            value="<?= e($data['other']) ?>"
+                            value="<?= $isPost ? e($data['other']) : '' ?>"
                         >
                     </div>
 
@@ -1254,7 +1012,7 @@ button {
                             min="0"
                             max="1"
                             step="0.01"
-                            value="<?= e($data['fuel_escalation_rate']) ?>"
+                            value="<?= $isPost ? e($data['fuel_escalation_rate']) : '0.20' ?>"
                         >
                     </div>
 
@@ -1262,7 +1020,7 @@ button {
 
             </div>
 
-            <!-- CARGOS ADICIONALES -->
+            <!-- OPCIONES -->
 
             <h3 class="options-title">
                 <i class="fas fa-sliders"></i>
@@ -1317,8 +1075,8 @@ button {
             <div class="button-group">
 
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    Guardar cotización
+                    <i class="fas fa-calculator"></i>
+                    Procesar cálculo
                 </button>
 
                 <button
@@ -1346,7 +1104,7 @@ button {
 
                 <h2>
                     <i class="fas fa-file-invoice-dollar"></i>
-                    Resumen de cotización
+                    Resumen de cálculo
                 </h2>
 
                 <span class="live-label">
@@ -1442,95 +1200,6 @@ button {
 
     </section>
 
-    <!-- HISTORIAL -->
-
-    <section class="history-section">
-
-        <div class="history-card">
-
-            <div class="history-header">
-
-                <h2>
-                    <i class="fas fa-clock-rotate-left"></i>
-                    Historial de cotizaciones
-                </h2>
-
-                <span class="history-count">
-                    <?= count($history) ?> / <?= MAX_HISTORY ?>
-                </span>
-
-            </div>
-
-            <div class="history-list">
-
-                <?php if (empty($history)): ?>
-
-                    <div class="empty-history">
-
-                        <i class="fas fa-folder-open"></i>
-
-                        <p>Todavía no hay cotizaciones guardadas.</p>
-
-                    </div>
-
-                <?php else: ?>
-
-                    <?php foreach ($history as $item): ?>
-
-                        <div class="history-item">
-
-                            <div>
-
-                                <b>
-                                    Cotización #<?= e($item['id']) ?>
-                                </b>
-
-                                <p>
-                                    <?= e($item['date']) ?>
-                                    · Peso:
-                                    <?= number_format(
-                                        (float)$item['data']['peso_volumetrico'],
-                                        2,
-                                        '.',
-                                        ','
-                                    ) ?> kg
-                                </p>
-
-                            </div>
-
-                            <strong>
-                                <?= usd($item['results']['total']) ?>
-                            </strong>
-
-                        </div>
-
-                    <?php endforeach; ?>
-
-                <?php endif; ?>
-
-            </div>
-
-            <?php if (!empty($history)): ?>
-
-                <div class="history-footer">
-
-                    <a
-                        href="?clear_history=1&amp;token=<?= e($_SESSION['m6_token']) ?>"
-                        class="btn btn-secondary"
-                        onclick="return confirm('¿Eliminar todas las cotizaciones del historial?')"
-                    >
-                        <i class="fas fa-trash"></i>
-                        Borrar historial
-                    </a>
-
-                </div>
-
-            <?php endif; ?>
-
-        </div>
-
-    </section>
-
     <!-- FOOTER -->
 
     <footer class="footer">
@@ -1552,7 +1221,7 @@ button {
 <script>
 
 /* ======================================================
-   SISTEMA M6 - MOTOR AUTOMÁTICO
+   SISTEMA M6 - CÁLCULOS AUTOMÁTICOS
 ====================================================== */
 
 const form = document.getElementById('calcForm');
@@ -1582,7 +1251,6 @@ function isChecked(id) {
 }
 
 function showMoney(id, value) {
-
     document.getElementById(id).textContent =
         formatter.format(value);
 }
@@ -1646,7 +1314,7 @@ function calculateLive() {
         ? collectFee
         : 0;
 
-    // SUBTOTAL ORIGINAL
+    // SUBTOTAL
     const subtotal =
         flete +
         fuel +
@@ -1666,7 +1334,7 @@ function calculateLive() {
     // TOTAL
     const total = subtotal + iva;
 
-    // ACTUALIZAR PANTALLA
+    // MOSTRAR RESULTADOS
     showMoney('r_flete', flete);
     showMoney('r_fuel', fuel);
     showMoney('r_fuel_escalation', fuelEscalation);
@@ -1697,9 +1365,7 @@ function calculateLive() {
     };
 }
 
-/* ======================================================
-   ACTUALIZACIÓN EN TIEMPO REAL
-====================================================== */
+/* CÁLCULOS EN VIVO */
 
 form.addEventListener('input', calculateLive);
 form.addEventListener('change', calculateLive);
@@ -1707,13 +1373,26 @@ form.addEventListener('change', calculateLive);
 calculateLive();
 
 /* ======================================================
-   LIMPIAR - UN CLIC, SIN PREGUNTAS
-   CONSERVA EL HISTORIAL
+   LIMPIAR - UN CLIC Y LISTO
 ====================================================== */
 
 document.getElementById('resetBtn').addEventListener('click', function() {
 
-    window.location.href = window.location.pathname;
+    form.reset();
+
+    // Restablecer porcentaje original
+    document.getElementById('fuel_escalation_rate').value = '0.20';
+
+    // Actualizar todos los resultados
+    calculateLive();
+
+    // Quitar mensajes de error anteriores
+    document.querySelectorAll('.alert').forEach(function(alert) {
+        alert.remove();
+    });
+
+    // Limpiar mensaje de copiado
+    document.getElementById('copyFeedback').textContent = '';
 
 });
 
