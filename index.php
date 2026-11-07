@@ -818,7 +818,8 @@ button, input, select {
 
 
 /* PROFORMA */
-.proforma-layout{display:grid;grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.proforma-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:20px;align-items:start;width:100%;min-width:0}
+.proforma-layout>*{min-width:0;max-width:100%}
 .proforma-controls{background:#101a2e;border:1px solid rgba(148,163,184,.14);border-radius:16px;padding:20px}
 .proforma-controls h3{font-size:14px;margin-bottom:16px;color:#e2e8f0}
 .proforma-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
@@ -831,11 +832,11 @@ button, input, select {
 .proforma-hint{font-size:10px;color:#94a3b8;line-height:1.5;margin-top:12px}
 .proforma-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
 .proforma-actions .btn{flex:1}
-.proforma-paper{background:#fff;color:#111827;padding:28px 26px;box-shadow:0 18px 50px rgba(0,0,0,.25);border-radius:4px;min-height:500px;font-family:Arial,sans-serif}
-.proforma-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;min-height:112px}
-.proforma-logo{width:245px;max-width:52%;height:auto;object-fit:contain;object-position:left top}
-.proforma-title{text-align:right;flex:1}
-.proforma-title h2{font-size:22px;font-weight:400;color:#111;margin:0 0 14px;white-space:nowrap}
+.proforma-paper{background:#fff;color:#111827;padding:28px 26px;box-shadow:0 18px 50px rgba(0,0,0,.25);border-radius:4px;min-height:500px;min-width:0;width:100%;max-width:100%;overflow:hidden;box-sizing:border-box;font-family:Arial,sans-serif}
+.proforma-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;min-height:112px;min-width:0}
+.proforma-logo{width: min(220px,48%);max-width:48%;height:auto;object-fit:contain;object-position:left top;flex:0 1 48%}
+.proforma-title{text-align:right;flex:1;min-width:0;overflow-wrap:anywhere}
+.proforma-title h2{font-size:clamp(15px,2vw,22px);font-weight:400;color:#111;margin:0 0 14px;white-space:normal;line-height:1.15}
 .proforma-title p{font-size:10px;color:#64748b;line-height:1.35;margin:0}
 .proforma-info{display:flex;justify-content:space-between;gap:20px;margin:24px 0 28px;font-size:11px;line-height:1.6}
 .proforma-client{max-width:48%;overflow-wrap:anywhere}
@@ -1318,7 +1319,6 @@ button, input, select {
               <div class="proforma-field"><label for="pfNumber">N.º de proforma</label><input id="pfNumber" type="text" value="001"></div>
               <div class="proforma-field"><label for="pfDate">Fecha</label><input id="pfDate" type="date"></div>
               <div class="proforma-field"><label for="pfDue">Vencimiento</label><input id="pfDue" type="date"></div>
-              <div class="proforma-field"><label for="pfDelivery">Fecha de entrega</label><input id="pfDelivery" type="date"></div>
               <div class="proforma-field full"><label for="pfDescription">Descripción</label><textarea id="pfDescription" placeholder="Descripción del servicio o cargo"></textarea></div>
               <div class="proforma-field"><label for="pfQuantity">Cantidad</label><input id="pfQuantity" type="number" min="0.01" step="0.01" value="1"></div>
               <div class="proforma-field"><label for="pfPrice">Precio unitario (USD)</label><input id="pfPrice" type="number" min="0" step="0.01" placeholder="0.00"></div>
@@ -1340,8 +1340,6 @@ button, input, select {
                 <div class="proforma-date-line"><span>Factura proforma n.º:</span><strong id="pfPreviewNumber">001</strong></div>
                 <div class="proforma-date-line"><span>Fecha:</span><strong id="pfPreviewDate">—</strong></div>
                 <div class="proforma-date-line"><span>Vencimiento:</span><strong id="pfPreviewDue">—</strong></div>
-                <div style="height:12px"></div>
-                <div class="proforma-date-line"><span>Fecha de entrega:</span><strong id="pfPreviewDelivery">—</strong></div>
               </div>
             </div>
             <table>
@@ -1701,7 +1699,7 @@ document.getElementById('copyBtn').addEventListener('click', async function() {
 
 
 /* GENERADOR DE PROFORMA - ACTUALIZACIÓN EN VIVO */
-const pfIds=['pfClient','pfNumber','pfDate','pfDue','pfDelivery','pfDescription','pfQuantity','pfPrice'];
+const pfIds=['pfClient','pfNumber','pfDate','pfDue','pfDescription','pfQuantity','pfPrice'];
 const pfMoney=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
 const pfDateFormat=value=>{
     if(!value)return '—';
@@ -1719,7 +1717,6 @@ function updateProforma(){
     put('pfPreviewNumber',document.getElementById('pfNumber').value.trim()||'—');
     put('pfPreviewDate',pfDateFormat(document.getElementById('pfDate').value));
     put('pfPreviewDue',pfDateFormat(document.getElementById('pfDue').value));
-    put('pfPreviewDelivery',pfDateFormat(document.getElementById('pfDelivery').value));
     put('pfPreviewDescription',document.getElementById('pfDescription').value.trim()||'—');
     put('pfPreviewQuantity',quantity.toLocaleString('en-US',{maximumFractionDigits:2}));
     put('pfPreviewPrice',price.toFixed(2));
@@ -1734,7 +1731,6 @@ function localDateInput(date){
 }
 const todayPF=new Date();
 document.getElementById('pfDate').value=localDateInput(todayPF);
-document.getElementById('pfDelivery').value=localDateInput(todayPF);
 const duePF=new Date(todayPF);duePF.setDate(duePF.getDate()+14);
 document.getElementById('pfDue').value=localDateInput(duePF);
 pfIds.forEach(id=>document.getElementById(id).addEventListener('input',updateProforma));
@@ -1746,7 +1742,6 @@ document.getElementById('pfClear').addEventListener('click',()=>{
     document.getElementById('pfQuantity').value='1';
     document.getElementById('pfPrice').value='';
     document.getElementById('pfDate').value=localDateInput(new Date());
-    document.getElementById('pfDelivery').value=localDateInput(new Date());
     const due=new Date();due.setDate(due.getDate()+14);
     document.getElementById('pfDue').value=localDateInput(due);
     updateProforma();
