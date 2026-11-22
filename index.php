@@ -1839,6 +1839,7 @@ document.getElementById('peso_volumetrico').addEventListener('input', updateCalc
 document.getElementById('peso_volumetrico').addEventListener('change', updateCalculatorTariff);
 
 
+const searchInput = document.getElementById('destinationSearch');
 const routeSelect = document.getElementById('routeType');
 const tariffBody = document.getElementById('tariffResults');
 const tariffCount = document.getElementById('tariffCount');
