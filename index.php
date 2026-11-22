@@ -895,6 +895,78 @@ button, input, select {
   .proforma-summary-row.total{color:#0b3158!important}
 }
 
+
+
+/* ======================================================
+   MEJORAS DE LEGIBILIDAD Y JERARQUÍA VISUAL
+   Capa adicional: conserva los estilos y módulos originales.
+====================================================== */
+body{font-size:14px;line-height:1.55}
+.container{max-width:1120px}
+.header{margin-bottom:30px}
+.brand h1{font-size:clamp(23px,3vw,30px);letter-spacing:-.9px}
+.brand p{font-size:11px;letter-spacing:1.15px}
+.status{font-size:11px;padding:11px 15px}
+.panel{padding:clamp(20px,3vw,34px);border-color:rgba(148,163,184,.19);box-shadow:0 22px 60px rgba(0,0,0,.25)}
+.section-heading{margin-bottom:28px;align-items:flex-start}
+.section-heading h2{font-size:19px;letter-spacing:-.25px}
+.section-heading p{font-size:13px;line-height:1.55}
+.form-grid{gap:22px 20px}
+.form-group{gap:8px}
+.form-group label{font-size:13px;color:#e2e8f0}
+.input-wrapper input,.input-wrapper select{height:52px;font-size:14px;border-color:rgba(148,163,184,.23)}
+.field-help{font-size:11px;line-height:1.45;color:#94a3b8}
+.options-title{font-size:14px;margin-top:30px}
+.options-grid{gap:14px}
+.option-card{min-height:58px;padding:15px 16px;border-color:rgba(148,163,184,.2)}
+.option-card span{font-size:12px;line-height:1.4}
+.menu-card{min-height:86px;padding:19px}
+.menu-card strong{font-size:14px}
+.menu-card small{font-size:11px;line-height:1.4}
+.result-card{padding:clamp(20px,3vw,30px)}
+.result-header h2{font-size:18px}
+.result-row{font-size:13px;padding:14px 0}
+.result-row span:first-child{font-size:13px;color:#b7c5d8}
+.result-row strong{font-size:13px}
+.total-box{padding:26px}
+.total-box p{font-size:11px}
+.total-box h3{font-size:clamp(32px,4vw,40px)}
+.btn{min-height:50px;font-size:13px}
+.tariff-search input,.tariff-search select{height:54px;font-size:14px}
+.tariff-table th,.tariff-table td{padding:14px 13px}
+.itinerary-card{padding:22px}
+.itinerary-card h3,.proforma-controls h3{font-size:15px}
+.itinerary-card>p,.itinerary-help{font-size:12px;line-height:1.65}
+.proforma-field label,.itinerary-field label{font-size:12px}
+.proforma-field input,.proforma-field textarea,.itinerary-field input,.itinerary-field select{font-size:13px}
+:focus-visible{outline:3px solid rgba(56,189,248,.75);outline-offset:2px}
+
+/* Calculadora volumétrica */
+.volumetric-card{margin:0 0 28px;padding:22px;border:1px solid rgba(56,189,248,.28);border-radius:17px;background:linear-gradient(145deg,rgba(14,165,233,.10),rgba(11,20,38,.82));}
+.volumetric-heading{display:flex;align-items:center;gap:13px;margin-bottom:19px}
+.volumetric-icon{width:44px;height:44px;display:grid;place-items:center;flex:0 0 44px;border-radius:13px;background:rgba(56,189,248,.14);color:#7dd3fc;font-size:19px}
+.volumetric-heading h3{font-size:15px;color:#f1f5f9;margin:0 0 4px}
+.volumetric-heading p{font-size:12px;color:#a8b8cc;line-height:1.5;margin:0}
+.volumetric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.volumetric-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.volumetric-field label{font-size:12px;font-weight:700;color:#dbeafe}
+.volumetric-field input,.volumetric-field select{width:100%;height:48px;min-width:0;padding:0 12px;border:1px solid rgba(148,163,184,.25);border-radius:10px;background:#081426;color:#f8fafc;font:inherit;font-size:14px;outline:none}
+.volumetric-field input:focus,.volumetric-field select:focus{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.volumetric-equation{min-height:38px;display:flex;align-items:center;gap:8px;margin-top:14px;padding:9px 12px;border-radius:9px;background:rgba(2,6,23,.32);color:#a9bed4;font-size:11px;line-height:1.5}
+.volumetric-equation i{color:#38bdf8}
+.volumetric-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:13px}
+.volumetric-result{display:flex;flex-direction:column;gap:2px}
+.volumetric-result span{font-size:11px;color:#a8b8cc}
+.volumetric-result strong{font-size:26px;line-height:1.25;color:#4ade80;font-weight:800;font-variant-numeric:tabular-nums}
+.volumetric-result small{font-size:10px;color:#94a3b8}
+.volumetric-bottom .btn{flex:0 0 auto}
+.volumetric-bottom .btn:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}
+.volumetric-note{margin-top:15px;color:#8fa3bb;font-size:10px;line-height:1.55}
+.volumetric-note i{color:#38bdf8;margin-right:4px}
+@media(max-width:700px){.volumetric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.volumetric-bottom{align-items:stretch;flex-direction:column}.volumetric-bottom .btn{width:100%}}
+@media(max-width:600px){.panel{padding:19px}.section-heading{margin-bottom:22px}.volumetric-card{padding:17px}.menu-card{min-height:76px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 
 </head>
@@ -969,12 +1041,58 @@ button, input, select {
 
         <form method="POST" id="calcForm">
 
+            <!-- CALCULADORA DE PESO VOLUMÉTRICO -->
+            <section class="volumetric-card" aria-labelledby="volumetricTitle">
+                <div class="volumetric-heading">
+                    <div class="volumetric-icon"><i class="fas fa-cube"></i></div>
+                    <div>
+                        <h3 id="volumetricTitle">Calculadora de peso volumétrico</h3>
+                        <p>Ingresá las dimensiones del paquete. El resultado se puede pasar directamente a la calculadora M6.</p>
+                    </div>
+                </div>
+                <div class="volumetric-grid">
+                    <div class="volumetric-field">
+                        <label for="volLength">Largo</label>
+                        <input type="number" id="volLength" min="0" step="0.01" placeholder="Ej. 60" inputmode="decimal">
+                    </div>
+                    <div class="volumetric-field">
+                        <label for="volWidth">Ancho</label>
+                        <input type="number" id="volWidth" min="0" step="0.01" placeholder="Ej. 40" inputmode="decimal">
+                    </div>
+                    <div class="volumetric-field">
+                        <label for="volHeight">Alto</label>
+                        <input type="number" id="volHeight" min="0" step="0.01" placeholder="Ej. 30" inputmode="decimal">
+                    </div>
+                    <div class="volumetric-field">
+                        <label for="volUnit">Unidad de medida</label>
+                        <select id="volUnit">
+                            <option value="cm">Centímetros (cm)</option>
+                            <option value="inch">Pulgadas (inch)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="volumetric-equation" id="volEquation" aria-live="polite">
+                    <i class="fas fa-calculator"></i> Completá largo, ancho y alto para calcular.
+                </div>
+                <div class="volumetric-bottom">
+                    <div class="volumetric-result" aria-live="polite">
+                        <span>Peso volumétrico calculado</span>
+                        <strong id="volResult">— kg</strong>
+                        <small id="volDivisor">Divisor: 6,000</small>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="applyVolWeight" disabled>
+                        <i class="fas fa-arrow-down"></i> Usar este peso en la guía
+                    </button>
+                </div>
+                <p class="volumetric-note"><i class="fas fa-circle-info"></i> Fórmula: largo × ancho × alto ÷ 6,000 para cm, o ÷ 366 para pulgadas. El peso se expresa en kg.</p>
+            </section>
+
             <div class="form-grid">
 
                 <div class="form-group">
 
                     <label for="peso_volumetrico">
-                        Peso volumétrico (kg)
+                        Peso volumétrico aplicado (kg)
                     </label>
 
                     <div class="input-wrapper">
@@ -991,6 +1109,7 @@ button, input, select {
                             value="<?= $isPost ? e($data['peso_volumetrico']) : '' ?>"
                         >
                     </div>
+                    <small class="field-help">Podés escribirlo manualmente o cargarlo desde la calculadora volumétrica de arriba.</small>
 
                 </div>
 
@@ -1452,6 +1571,60 @@ button, input, select {
 
 const form = document.getElementById('calcForm');
 
+/* CALCULADORA VOLUMÉTRICA: cm³/6000 o in³/366 = kg */
+const volLength = document.getElementById('volLength');
+const volWidth = document.getElementById('volWidth');
+const volHeight = document.getElementById('volHeight');
+const volUnit = document.getElementById('volUnit');
+const volResult = document.getElementById('volResult');
+const volDivisor = document.getElementById('volDivisor');
+const volEquation = document.getElementById('volEquation');
+const applyVolWeight = document.getElementById('applyVolWeight');
+let calculatedVolumetricWeight = null;
+
+function updateVolumetricCalculator(){
+    const length = Number.parseFloat(volLength.value);
+    const width = Number.parseFloat(volWidth.value);
+    const height = Number.parseFloat(volHeight.value);
+    const allEntered = [volLength.value,volWidth.value,volHeight.value].every(v => v.trim() !== '');
+    const valid = allEntered && [length,width,height].every(v => Number.isFinite(v) && v > 0);
+    const isInch = volUnit.value === 'inch';
+    const divisor = isInch ? 366 : 6000;
+    volDivisor.textContent = 'Divisor: ' + divisor.toLocaleString('en-US');
+
+    if(!valid){
+        calculatedVolumetricWeight = null;
+        volResult.textContent = '— kg';
+        volEquation.innerHTML = '<i class="fas fa-calculator"></i> Ingresá tres dimensiones mayores que cero para calcular.';
+        applyVolWeight.disabled = true;
+        return null;
+    }
+
+    const volume = length * width * height;
+    calculatedVolumetricWeight = volume / divisor;
+    const unitLabel = isInch ? 'in' : 'cm';
+    volResult.textContent = calculatedVolumetricWeight.toFixed(2) + ' kg';
+    volEquation.innerHTML = '<i class="fas fa-equals"></i> ' +
+        [length,width,height].map(v => v.toLocaleString('en-US',{maximumFractionDigits:2})).join(' × ') +
+        ' ' + unitLabel + ' ÷ ' + divisor.toLocaleString('en-US') +
+        ' = ' + calculatedVolumetricWeight.toFixed(2) + ' kg';
+    applyVolWeight.disabled = false;
+    return calculatedVolumetricWeight;
+}
+
+[volLength,volWidth,volHeight,volUnit].forEach(element => {
+    element.addEventListener('input',updateVolumetricCalculator);
+    element.addEventListener('change',updateVolumetricCalculator);
+});
+applyVolWeight.addEventListener('click',()=>{
+    const weight = updateVolumetricCalculator();
+    if(weight === null) return;
+    document.getElementById('peso_volumetrico').value = weight.toFixed(2);
+    calculateLive();
+    document.getElementById('peso_volumetrico').focus();
+});
+updateVolumetricCalculator();
+
 // La calculadora trabaja completamente en vivo, sin procesar ni recargar la página.
 form.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -1733,6 +1906,7 @@ calculateLive();
 document.getElementById('resetBtn').addEventListener('click', function() {
 
     form.reset();
+    updateVolumetricCalculator();
 
     // Restablecer porcentaje original
     document.getElementById('fuel_escalation_rate').value = '0.20';
@@ -1773,6 +1947,7 @@ document.getElementById('copyBtn').addEventListener('click', async function() {
         '================================',
         '',
         'Peso volumétrico: ' + result.peso.toFixed(2) + ' kg',
+        ...(calculatedVolumetricWeight !== null ? ['Dimensiones: ' + [volLength.value,volWidth.value,volHeight.value].join(' × ') + ' ' + (volUnit.value === 'inch' ? 'inch' : 'cm'), 'Cálculo volumétrico: ' + calculatedVolumetricWeight.toFixed(2) + ' kg'] : []),
         'Peak Season: ' + peakLabel,
         '',
         'DETALLE DE CARGOS',
